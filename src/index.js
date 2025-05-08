@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import app from './app.js';
-import config from './config/config.js';
+import * as config from './config/config.js';
 import logger from './config/logger.js';
 
 let server;

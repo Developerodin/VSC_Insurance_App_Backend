@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import config from '../config/config.js';
+import * as config from '../config/config.js';
 import logger from '../config/logger.js';
 
 

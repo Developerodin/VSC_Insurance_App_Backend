@@ -1,14 +1,12 @@
-import packageJson from '../../package.json' assert { type: 'json' };
+import pkg from '../../package.json' assert { type: 'json' };
+import * as config from '../config/config.js';
 
-const { version } = packageJson;
-import config from '../config/config.js';
-
-
-const swaggerDef = {
+export const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'node-express-boilerplate API documentation',
-    version,
+    title: 'VSC Insurance App API Documentation',
+    version: pkg.version,
+    description: 'API documentation for VSC Insurance App - A comprehensive platform for insurance and banking product sales management',
     license: {
       name: 'MIT',
       url: 'https://github.com/hagopj13/node-express-boilerplate/blob/master/LICENSE',
@@ -19,7 +17,55 @@ const swaggerDef = {
       url: `http://localhost:${config.port}/v1`,
     },
   ],
+  tags: [
+    {
+      name: 'auth',
+      description: 'Authentication endpoints',
+    },
+    {
+      name: 'users',
+      description: 'User operations',
+    },
+    {
+      name: 'products',
+      description: 'Insurance and banking product operations',
+    },
+    {
+      name: 'leads',
+      description: 'Lead management operations',
+    },
+    {
+      name: 'commissions',
+      description: 'Commission management operations',
+    },
+    {
+      name: 'bank-accounts',
+      description: 'Bank account management operations',
+    },
+    {
+      name: 'notifications',
+      description: 'Notification management operations',
+    },
+    {
+      name: 'transactions',
+      description: 'Transaction management operations',
+    },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
+  },
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
 };
 
-export default swaggerDef;
+export default swaggerDefinition;
 

@@ -30,21 +30,187 @@ const userSchema = mongoose.Schema(
       required: true,
       trim: true,
       minlength: 8,
+      private: true,
+    },
+    mobileNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
       validate(value) {
-        if (!value.match(/\d/) || !value.match(/[a-zA-Z]/)) {
-          throw new Error('Password must contain at least one letter and one number');
+        if (!validator.isMobilePhone(value, 'en-IN')) {
+          throw new Error('Invalid mobile number');
         }
       },
-      private: true, // used by the toJSON plugin
     },
     role: {
       type: String,
       enum: roles,
       default: 'user',
     },
+    status: {
+      type: String,
+      enum: ['pending', 'active', 'inactive', 'suspended'],
+      default: 'pending',
+    },
+    kycStatus: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected'],
+      default: 'pending',
+    },
+    aadhaarNumber: {
+      type: String,
+      trim: true,
+      validate(value) {
+        if (value && !validator.isLength(value, { min: 12, max: 12 })) {
+          throw new Error('Invalid Aadhaar number');
+        }
+      },
+    },
+    panNumber: {
+      type: String,
+      trim: true,
+      validate(value) {
+        if (value && !validator.matches(value, /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)) {
+          throw new Error('Invalid PAN number');
+        }
+      },
+    },
+    bankAccounts: [{
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'BankAccount',
+    }],
+    totalCommission: {
+      type: Number,
+      default: 0,
+    },
+    totalLeads: {
+      type: Number,
+      default: 0,
+    },
+    totalSales: {
+      type: Number,
+      default: 0,
+    },
+    lastLogin: {
+      type: Date,
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
+    },
+    isMobileVerified: {
+      type: Boolean,
+      default: false,
+    },
+    profilePicture: {
+      type: String,
+    },
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      pincode: String,
+      country: {
+        type: String,
+        default: 'India',
+      },
+    },
+    documents: [{
+      type: {
+        type: String,
+        enum: ['aadhaar', 'pan', 'addressProof', 'other'],
+      },
+      url: String,
+      verified: {
+        type: Boolean,
+        default: false,
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    }],
+    onboardingStatus: {
+      type: String,
+      enum: ['pending', 'in_progress', 'completed', 'rejected'],
+      default: 'pending',
+    },
+    kycDetails: {
+      aadhaarNumber: {
+        type: String,
+        trim: true,
+        validate(value) {
+          if (value && !validator.isLength(value, { min: 12, max: 12 })) {
+            throw new Error('Invalid Aadhaar number');
+          }
+        },
+      },
+      aadhaarVerified: {
+        type: Boolean,
+        default: false,
+      },
+      aadhaarVerificationDate: Date,
+      panNumber: {
+        type: String,
+        trim: true,
+        validate(value) {
+          if (value && !validator.matches(value, /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)) {
+            throw new Error('Invalid PAN number');
+          }
+        },
+      },
+      panVerified: {
+        type: Boolean,
+        default: false,
+      },
+      panVerificationDate: Date,
+      documents: [{
+        type: {
+          type: String,
+          enum: ['aadhaar', 'pan', 'addressProof', 'photo', 'other'],
+          required: true,
+        },
+        url: String,
+        verified: {
+          type: Boolean,
+          default: false,
+        },
+        verifiedBy: {
+          type: mongoose.SchemaTypes.ObjectId,
+          ref: 'User',
+        },
+        verifiedAt: Date,
+        rejectionReason: String,
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      }],
+    },
+    otp: {
+      code: String,
+      expiresAt: Date,
+      attempts: {
+        type: Number,
+        default: 0,
+      },
+    },
+    emailVerification: {
+      token: String,
+      expiresAt: Date,
+      verified: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    mobileVerification: {
+      token: String,
+      expiresAt: Date,
+      verified: {
+        type: Boolean,
+        default: false,
+      },
     },
   },
   {
@@ -64,6 +230,17 @@ userSchema.plugin(paginate);
  */
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
+  return !!user;
+};
+
+/**
+ * Check if mobile number is taken
+ * @param {string} mobileNumber - The user's mobile number
+ * @param {ObjectId} [excludeUserId] - The id of the user to be excluded
+ * @returns {Promise<boolean>}
+ */
+userSchema.statics.isMobileTaken = async function (mobileNumber, excludeUserId) {
+  const user = await this.findOne({ mobileNumber, _id: { $ne: excludeUserId } });
   return !!user;
 };
 

@@ -17,7 +17,31 @@ router
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
   .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
 
-  export default router;
+router
+  .route('/:userId/kyc/documents')
+  .post(auth(), validate(userValidation.uploadKycDocument), userController.uploadKycDocument);
+
+router
+  .route('/:userId/kyc/details')
+  .patch(auth(), validate(userValidation.updateKycDetails), userController.updateKycDetails);
+
+router
+  .route('/:userId/verify/mobile')
+  .post(auth(), validate(userValidation.verifyMobile), userController.verifyMobile);
+
+router
+  .route('/:userId/verify/email')
+  .post(auth(), validate(userValidation.verifyEmail), userController.verifyEmail);
+
+router
+  .route('/:userId/verify/resend')
+  .post(auth(), validate(userValidation.resendVerification), userController.resendVerification);
+
+router
+  .route('/:userId/onboarding/status')
+  .get(auth(), validate(userValidation.getOnboardingStatus), userController.getOnboardingStatus);
+
+export default router;
 
 /**
  * @swagger

@@ -1,9 +1,14 @@
+import httpStatus from 'http-status';
+
 class ApiError extends Error {
-  constructor(statusCode, message, isOperational = true, stack = '') {
-    super(message);
+  constructor(statusCode, message) {
+    super();
     this.statusCode = statusCode;
-    this.isOperational = isOperational;
-    this.stack = stack || Error.captureStackTrace(this, this.constructor);
+    this.message = message;
+    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+    this.isOperational = true;
+
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 

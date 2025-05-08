@@ -6,7 +6,7 @@ import compression from 'compression';
 import cors from 'cors';
 import passport from 'passport';
 import httpStatus from 'http-status';
-import config from './config/config.js';
+import * as config from './config/config.js';
 import * as morgan from './config/morgan.js';
 import { jwtStrategy } from './config/passport.js';
 import { authLimiter } from './middlewares/rateLimiter.js';
@@ -49,7 +49,9 @@ passport.use('jwt', jwtStrategy);
 if (config.env === 'production') {
   app.use('/v1/auth', authLimiter);
 }
-
+app.get('/',(req,res)=>{
+  res.send('Server is running');
+});
 // v1 api routes
 app.use('/v1', routes);
 

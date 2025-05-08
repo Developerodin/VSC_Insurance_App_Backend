@@ -1,5 +1,5 @@
 import httpStatus from 'http-status';
-import catchAsync from '../utils/catchAsync.js';
+import {catchAsync} from '../utils/catchAsync.js';
 import { createUser } from '../services/user.service.js';
 import { generateAuthTokens,generateResetPasswordToken,generateVerifyEmailToken } from '../services/token.service.js';
 import { loginUserWithEmailAndPassword,logout as logout2,refreshAuth,resetPassword as resetPassword2,verifyEmail as verifyEmail2  } from '../services/auth.service.js';

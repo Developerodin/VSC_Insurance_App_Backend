@@ -2,7 +2,14 @@ import express from 'express';
 import authRoute from './auth.route.js';
 import userRoute from './user.route.js';
 import docsRoute from './docs.route.js';
-import config from '../../config/config.js';
+import productRoute from './product.route.js';
+import leadRoute from './lead.route.js';
+import commissionRoute from './commission.route.js';
+import bankAccountRoute from './bankAccount.route.js';
+import notificationRoute from './notification.route.js';
+import transactionRoute from './transaction.route.js';
+import adminRoute from './admin.route.js';
+import * as config from '../../config/config.js';
 
 const router = express.Router();
 
@@ -14,6 +21,34 @@ const defaultRoutes = [
   {
     path: '/users',
     route: userRoute,
+  },
+  {
+    path: '/products',
+    route: productRoute,
+  },
+  {
+    path: '/leads',
+    route: leadRoute,
+  },
+  {
+    path: '/commissions',
+    route: commissionRoute,
+  },
+  {
+    path: '/bank-accounts',
+    route: bankAccountRoute,
+  },
+  {
+    path: '/notifications',
+    route: notificationRoute,
+  },
+  {
+    path: '/transactions',
+    route: transactionRoute,
+  },
+  {
+    path: '/admin',
+    route: adminRoute,
   },
 ];
 
