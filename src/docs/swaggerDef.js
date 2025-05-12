@@ -1,4 +1,6 @@
-import pkg from '../../package.json' assert { type: 'json' };
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json');
 import * as config from '../config/config.js';
 
 export const swaggerDefinition = {
