@@ -15,6 +15,9 @@ const getCategories = {
     name: Joi.string(),
     type: Joi.string().valid('insurance', 'banking'),
     status: Joi.string().valid('active', 'inactive'),
+    sortBy: Joi.string(),
+    limit: Joi.number().integer(),
+    page: Joi.number().integer(),
   }),
 };
 

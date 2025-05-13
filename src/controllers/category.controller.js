@@ -10,10 +10,17 @@ export const createCategory = catchAsync(async (req, res) => {
 
 export const getCategories = catchAsync(async (req, res) => {
   const filter = {};
+  if (req.query.name) filter.name = req.query.name;
   if (req.query.type) filter.type = req.query.type;
   if (req.query.status) filter.status = req.query.status;
   
-  const categories = await Category.paginate(filter);
+  const options = {
+    sortBy: req.query.sortBy || 'createdAt',
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1,
+  };
+  
+  const categories = await Category.paginate(filter, options);
   res.send(categories);
 });
 
