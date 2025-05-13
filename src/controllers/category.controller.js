@@ -21,7 +21,16 @@ export const getCategories = catchAsync(async (req, res) => {
   };
   
   const categories = await Category.paginate(filter, options);
-  res.send(categories);
+  // Transform the response to ensure timestamps are included
+  const transformedResults = {
+    ...categories,
+    results: categories.results.map(category => ({
+      ...category.toJSON(),
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt
+    }))
+  };
+  res.send(transformedResults);
 });
 
 export const getCategory = catchAsync(async (req, res) => {
@@ -29,7 +38,13 @@ export const getCategory = catchAsync(async (req, res) => {
   if (!category) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Category not found');
   }
-  res.send(category);
+  // Transform the response to ensure timestamps are included
+  const transformedCategory = {
+    ...category.toJSON(),
+    createdAt: category.createdAt,
+    updatedAt: category.updatedAt
+  };
+  res.send(transformedCategory);
 });
 
 export const updateCategory = catchAsync(async (req, res) => {
@@ -39,7 +54,13 @@ export const updateCategory = catchAsync(async (req, res) => {
   }
   Object.assign(category, req.body);
   await category.save();
-  res.send(category);
+  // Transform the response to ensure timestamps are included
+  const transformedCategory = {
+    ...category.toJSON(),
+    createdAt: category.createdAt,
+    updatedAt: category.updatedAt
+  };
+  res.send(transformedCategory);
 });
 
 export const deleteCategory = catchAsync(async (req, res) => {
@@ -59,5 +80,11 @@ export const updateCategoryStatus = catchAsync(async (req, res) => {
   }
   category.status = status;
   await category.save();
-  res.send(category);
+  // Transform the response to ensure timestamps are included
+  const transformedCategory = {
+    ...category.toJSON(),
+    createdAt: category.createdAt,
+    updatedAt: category.updatedAt
+  };
+  res.send(transformedCategory);
 }); 
