@@ -2,16 +2,19 @@ import Joi from 'joi';
 
 const createCategory = {
   body: Joi.object().keys({
-    name: Joi.string().required(),
-    description: Joi.string(),
-    isActive: Joi.boolean(),
+    name: Joi.string().required().trim(),
+    description: Joi.string().required(),
+    type: Joi.string().valid('insurance', 'banking').required(),
+    status: Joi.string().valid('active', 'inactive').default('active'),
+    metadata: Joi.object().pattern(Joi.string(), Joi.any()),
   }),
 };
 
 const getCategories = {
   query: Joi.object().keys({
     name: Joi.string(),
-    isActive: Joi.boolean(),
+    type: Joi.string().valid('insurance', 'banking'),
+    status: Joi.string().valid('active', 'inactive'),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -30,9 +33,11 @@ const updateCategory = {
   }),
   body: Joi.object()
     .keys({
-      name: Joi.string(),
+      name: Joi.string().trim(),
       description: Joi.string(),
-      isActive: Joi.boolean(),
+      type: Joi.string().valid('insurance', 'banking'),
+      status: Joi.string().valid('active', 'inactive'),
+      metadata: Joi.object().pattern(Joi.string(), Joi.any()),
     })
     .min(1),
 };

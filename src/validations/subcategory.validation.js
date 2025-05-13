@@ -2,18 +2,19 @@ import Joi from 'joi';
 
 const createSubcategory = {
   body: Joi.object().keys({
-    name: Joi.string().required(),
-    description: Joi.string(),
-    categoryId: Joi.string().required(),
-    isActive: Joi.boolean(),
+    name: Joi.string().required().trim(),
+    description: Joi.string().required(),
+    category: Joi.string().required(),
+    status: Joi.string().valid('active', 'inactive').default('active'),
+    metadata: Joi.object().pattern(Joi.string(), Joi.any()),
   }),
 };
 
 const getSubcategories = {
   query: Joi.object().keys({
     name: Joi.string(),
-    categoryId: Joi.string(),
-    isActive: Joi.boolean(),
+    category: Joi.string(),
+    status: Joi.string().valid('active', 'inactive'),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -32,10 +33,11 @@ const updateSubcategory = {
   }),
   body: Joi.object()
     .keys({
-      name: Joi.string(),
+      name: Joi.string().trim(),
       description: Joi.string(),
-      categoryId: Joi.string(),
-      isActive: Joi.boolean(),
+      category: Joi.string(),
+      status: Joi.string().valid('active', 'inactive'),
+      metadata: Joi.object().pattern(Joi.string(), Joi.any()),
     })
     .min(1),
 };
