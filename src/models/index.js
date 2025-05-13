@@ -6,6 +6,8 @@ import Commission from './commission.model.js';
 import BankAccount from './bankAccount.model.js';
 import Notification from './notification.model.js';
 import Transaction from './transaction.model.js';
+import Category from './category.model.js';
+import Subcategory from './subcategory.model.js';
 
 export {
   User,
@@ -16,5 +18,7 @@ export {
   BankAccount,
   Notification,
   Transaction,
+  Category,
+  Subcategory,
 };
 
