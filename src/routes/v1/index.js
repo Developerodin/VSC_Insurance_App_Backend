@@ -9,6 +9,8 @@ import bankAccountRoute from './bankAccount.route.js';
 import notificationRoute from './notification.route.js';
 import transactionRoute from './transaction.route.js';
 import adminRoute from './admin.route.js';
+import categoryRoute from './category.route.js';
+import subcategoryRoute from './subcategory.route.js';
 import * as config from '../../config/config.js';
 
 const router = express.Router();
@@ -25,6 +27,14 @@ const defaultRoutes = [
   {
     path: '/products',
     route: productRoute,
+  },
+  {
+    path: '/categories',
+    route: categoryRoute,
+  },
+  {
+    path: '/subcategories',
+    route: subcategoryRoute,
   },
   {
     path: '/leads',

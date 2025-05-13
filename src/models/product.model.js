@@ -13,15 +13,11 @@ const productSchema = mongoose.Schema(
       enum: ['insurance', 'banking'],
       required: true,
     },
-    category: {
-      type: String,
+    categories: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
       required: true,
-      trim: true,
-    },
-    subCategory: {
-      type: String,
-      trim: true,
-    },
+    }],
     description: {
       type: String,
       required: true,
