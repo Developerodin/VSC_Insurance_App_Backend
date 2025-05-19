@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import moment from 'moment';
 import httpStatus from 'http-status';
 import * as config from '../config/config.js';
-import {getUserByEmail} from './user.service.js';
+import {getUserByEmail, getUserById} from './user.service.js';
 
 import ApiError from '../utils/ApiError.js';
 import { tokenTypes } from '../config/tokens.js';
@@ -55,6 +55,17 @@ const saveToken = async (token, userId, expires, type, blacklisted = false) => {
  */
 const verifyToken = async (token, type) => {
   const payload = jwt.verify(token, config.jwt.secret);
+  
+  // For access tokens, we don't require them to be in the database
+  if (type === tokenTypes.ACCESS) {
+    const user = await getUserById(payload.sub);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return user;
+  }
+  
+  // For other token types (refresh, reset, verify), check in database
   const tokenDoc = await Token.findOne({ token, type, user: payload.sub, blacklisted: false });
   if (!tokenDoc) {
     throw new Error('Token not found');

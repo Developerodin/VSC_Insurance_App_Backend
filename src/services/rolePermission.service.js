@@ -55,10 +55,10 @@ const removePermissionFromRole = async (roleId, permissionId) => {
   if (!rolePermission) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Role permission not found');
   }
-  await rolePermission.remove();
+  await rolePermission.deleteOne();
 };
 
-export const rolePermissionService = {
+export {
   assignPermissionsToRole,
   getPermissionsForRole,
   removePermissionFromRole,

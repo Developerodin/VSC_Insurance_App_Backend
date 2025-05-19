@@ -63,11 +63,11 @@ const deleteRoleById = async (roleId) => {
   if (!role) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Role not found');
   }
-  await role.remove();
+  await role.deleteOne();
   return role;
 };
 
-export const roleService = {
+export {
   createRole,
   queryRoles,
   getRoleById,

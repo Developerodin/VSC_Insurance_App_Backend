@@ -63,11 +63,11 @@ const deletePermissionById = async (permissionId) => {
   if (!permission) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Permission not found');
   }
-  await permission.remove();
+  await permission.deleteOne();
   return permission;
 };
 
-export const permissionService = {
+export {
   createPermission,
   queryPermissions,
   getPermissionById,
