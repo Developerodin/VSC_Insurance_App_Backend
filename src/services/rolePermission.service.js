@@ -9,21 +9,30 @@ import ApiError from '../utils/ApiError.js';
  * @returns {Promise<Array<RolePermission>>}
  */
 const assignPermissionsToRole = async (roleId, permissionIds) => {
+  // Validate roleId
   const role = await Role.findById(roleId);
   if (!role) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Role not found');
   }
 
+  // Validate permissionIds
+  if (!permissionIds || !Array.isArray(permissionIds) || permissionIds.length === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Permission IDs must be a non-empty array');
+  }
+
+  // Verify all permissions exist
   const permissions = await Permission.find({ _id: { $in: permissionIds } });
   if (permissions.length !== permissionIds.length) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'One or more permissions not found');
   }
 
+  // Create role-permission mappings
   const rolePermissions = permissionIds.map((permissionId) => ({
     roleId,
     permissionId,
   }));
 
+  // Remove existing permissions and add new ones
   await RolePermission.deleteMany({ roleId });
   const createdRolePermissions = await RolePermission.insertMany(rolePermissions);
   return createdRolePermissions;

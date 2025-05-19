@@ -3,8 +3,15 @@ import {catchAsync} from '../utils/catchAsync.js';
 import * as  rolePermissionService  from '../services/rolePermission.service.js';
 
 const assignPermissionsToRole = catchAsync(async (req, res) => {
+  // Debug logs
+  console.log('Request body:', JSON.stringify(req.body));
+  console.log('permissionIds from body:', req.body.permissionIds);
+  
   const { roleId } = req.params;
   const { permissionIds } = req.body;
+  
+  console.log('Extracted permissionIds:', permissionIds);
+  
   const rolePermissions = await rolePermissionService.assignPermissionsToRole(roleId, permissionIds);
   res.status(httpStatus.CREATED).send(rolePermissions);
 });

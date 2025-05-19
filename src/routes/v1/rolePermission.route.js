@@ -1,8 +1,8 @@
 import express from 'express';
 import auth from '../../middlewares/auth.js';
 import validate from '../../middlewares/validate.js';
-import * as rolePermissionValidation from '../../validations/rolePermission.validation.js';
-import  rolePermissionController from '../../controllers/rolePermission.controller.js';
+import rolePermissionValidation from '../../validations/rolePermission.validation.js';
+import rolePermissionController from '../../controllers/rolePermission.controller.js';
 
 const router = express.Router();
 
