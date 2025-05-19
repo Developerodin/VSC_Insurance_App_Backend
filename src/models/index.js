@@ -8,6 +8,9 @@ import Notification from './notification.model.js';
 import Transaction from './transaction.model.js';
 import Category from './category.model.js';
 import Subcategory from './subcategory.model.js';
+import Role from './role.model.js';
+import Permission from './permission.model.js';
+import RolePermission from './rolePermission.model.js';
 
 export {
   User,
@@ -20,5 +23,8 @@ export {
   Transaction,
   Category,
   Subcategory,
+  Role,
+  Permission,
+  RolePermission,
 };
 
