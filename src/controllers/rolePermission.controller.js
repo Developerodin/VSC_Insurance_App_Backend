@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
-import catchAsync from '../utils/catchAsync.js';
-import { rolePermissionService } from '../services/index.js';
+import {catchAsync} from '../utils/catchAsync.js';
+import * as  rolePermissionService  from '../services/rolePermission.service.js';
 
 const assignPermissionsToRole = catchAsync(async (req, res) => {
   const { roleId } = req.params;

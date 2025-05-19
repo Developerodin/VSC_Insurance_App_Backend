@@ -1,6 +1,6 @@
 import httpStatus from 'http-status';
-import catchAsync from '../utils/catchAsync.js';
-import { roleService } from '../services/index.js';
+import {catchAsync} from '../utils/catchAsync.js';
+import * as roleService  from '../services/role.service.js';
 
 const createRole = catchAsync(async (req, res) => {
   const role = await roleService.createRole(req.body);

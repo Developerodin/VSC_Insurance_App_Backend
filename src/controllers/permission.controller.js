@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
-import catchAsync from '../utils/catchAsync.js';
-import { permissionService } from '../services/index.js';
+
+import {catchAsync} from '../utils/catchAsync.js';
+import * as permissionService  from '../services/permission.service.js';
 
 const createPermission = catchAsync(async (req, res) => {
   const permission = await permissionService.createPermission(req.body);
