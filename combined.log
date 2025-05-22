@@ -81,3 +81,6 @@
 {"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-19 16:46:17"}
 {"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-19 16:46:19"}
 {"message":"POST /v1/role-permissions/roles/682abddb80064306f848a387/permissions 201 - 185.677 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-19 16:46:20"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-22 11:06:41"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-22 11:06:41"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-22 11:06:43"}

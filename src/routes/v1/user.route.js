@@ -8,38 +8,38 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageUsers'), validate(userValidation.createUser), userController.createUser)
-  .get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
+  .post( validate(userValidation.createUser), userController.createUser)
+  .get( validate(userValidation.getUsers), userController.getUsers);
 
 router
   .route('/:userId')
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
-  .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
-  .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
+  .get( validate(userValidation.getUser), userController.getUser)
+  .patch( validate(userValidation.updateUser), userController.updateUser)
+  .delete( validate(userValidation.deleteUser), userController.deleteUser);
 
 router
   .route('/:userId/kyc/documents')
-  .post(auth(), validate(userValidation.uploadKycDocument), userController.uploadKycDocument);
+  .post( validate(userValidation.uploadKycDocument), userController.uploadKycDocument);
 
 router
   .route('/:userId/kyc/details')
-  .patch(auth(), validate(userValidation.updateKycDetails), userController.updateKycDetails);
+  .patch( validate(userValidation.updateKycDetails), userController.updateKycDetails);
 
 router
   .route('/:userId/verify/mobile')
-  .post(auth(), validate(userValidation.verifyMobile), userController.verifyMobile);
+  .post( validate(userValidation.verifyMobile), userController.verifyMobile);
 
 router
   .route('/:userId/verify/email')
-  .post(auth(), validate(userValidation.verifyEmail), userController.verifyEmail);
+  .post( validate(userValidation.verifyEmail), userController.verifyEmail);
 
 router
   .route('/:userId/verify/resend')
-  .post(auth(), validate(userValidation.resendVerification), userController.resendVerification);
+  .post( validate(userValidation.resendVerification), userController.resendVerification);
 
 router
   .route('/:userId/onboarding/status')
-  .get(auth(), validate(userValidation.getOnboardingStatus), userController.getOnboardingStatus);
+  .get( validate(userValidation.getOnboardingStatus), userController.getOnboardingStatus);
 
 export default router;
 
