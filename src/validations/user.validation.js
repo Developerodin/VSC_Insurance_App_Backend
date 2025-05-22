@@ -6,9 +6,9 @@ export const createUser = {
   body: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(6),
-    name: Joi.string().required(),
-    role: Joi.string().required().valid(...roles),
-    mobileNumber: Joi.string().required(),
+    name: Joi.string(),
+    role: Joi.string().valid(...roles),
+    mobileNumber: Joi.string(),
     status: Joi.string().valid('pending', 'active', 'inactive', 'suspended'),
     onboardingStatus: Joi.string().valid('pending', 'in_progress', 'completed', 'rejected'),
     kycDetails: Joi.object().keys({
