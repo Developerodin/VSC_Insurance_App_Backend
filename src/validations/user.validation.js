@@ -45,7 +45,7 @@ export const updateUser = {
       email: Joi.string().email(),
       password: Joi.string().min(8),
       name: Joi.string().trim(),
-      mobileNumber: Joi.string().pattern(/^[0-9]{10}$/),
+      mobileNumber: Joi.string(),
       role: Joi.string().valid(...roles),
       status: Joi.string().valid('pending', 'active', 'inactive', 'suspended'),
       kycStatus: Joi.string().valid('pending', 'verified', 'rejected'),

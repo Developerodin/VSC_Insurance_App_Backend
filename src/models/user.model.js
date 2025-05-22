@@ -33,7 +33,6 @@ const userSchema = mongoose.Schema(
     },
     mobileNumber: {
       type: String,
-      unique: true,
       trim: true,
       validate(value) {
         if (!validator.isMobilePhone(value, 'en-IN')) {
@@ -237,10 +236,10 @@ userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
  * @param {ObjectId} [excludeUserId] - The id of the user to be excluded
  * @returns {Promise<boolean>}
  */
-userSchema.statics.isMobileTaken = async function (mobileNumber, excludeUserId) {
-  const user = await this.findOne({ mobileNumber, _id: { $ne: excludeUserId } });
-  return !!user;
-};
+// userSchema.statics.isMobileTaken = async function (mobileNumber, excludeUserId) {
+//   const user = await this.findOne({ mobileNumber, _id: { $ne: excludeUserId } });
+//   return !!user;
+// };
 
 /**
  * Check if password matches the user's password
