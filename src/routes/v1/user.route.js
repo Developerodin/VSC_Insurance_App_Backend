@@ -3,6 +3,8 @@ import auth from '../../middlewares/auth.js';
 import validate from '../../middlewares/validate.js';
 import * as userValidation from '../../validations/user.validation.js';
 import * as userController from '../../controllers/user.controller.js';
+import * as authValidation from '../../validations/auth.validation.js';
+import * as authController from '../../controllers/auth.controller.js';
 
 const router = express.Router();
 
@@ -40,6 +42,8 @@ router
 router
   .route('/:userId/onboarding/status')
   .get( validate(userValidation.getOnboardingStatus), userController.getOnboardingStatus);
+
+router.post('/login', validate(authValidation.login), authController.login);
 
 export default router;
 
