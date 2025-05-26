@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import * as config from '../config/config.js';
 import { Role, Permission, RolePermission } from '../models/index.js';
+import { fileURLToPath } from 'url';
 
 const defaultRoles = [
   {
@@ -11,12 +12,39 @@ const defaultRoles = [
   {
     name: 'admin',
     description: 'Administrator role',
-    permissions: ['getUsers', 'manageUsers', 'getProducts', 'manageProducts', 'getCategories', 'manageCategories', 'getSubcategories', 'manageSubcategories', 'getLeads', 'manageLeads', 'getBankAccounts', 'manageBankAccounts', 'getTransactions', 'manageTransactions', 'getCommissions', 'manageCommissions', 'getNotifications', 'manageNotifications', 'getSettings', 'manageSettings']
+    permissions: [
+      'getUsers', 'manageUsers', 
+      'getProducts', 'manageProducts', 
+      'getCategories', 'manageCategories', 
+      'getSubcategories', 'manageSubcategories', 
+      'getLeads', 'manageLeads', 
+      'getBankAccounts', 'manageBankAccounts', 
+      'getTransactions', 'manageTransactions', 
+      'getCommissions', 'manageCommissions', 
+      'getNotifications', 'manageNotifications', 
+      'getSettings', 'manageSettings',
+      'getRoles',
+      'accessAdminPanel', 'adminViewUsers', 'adminManageKyc'
+    ]
   },
   {
     name: 'superAdmin',
     description: 'Super Administrator role with all permissions',
-    permissions: ['getUsers', 'manageUsers', 'manageAdmins', 'getProducts', 'manageProducts', 'getCategories', 'manageCategories', 'getSubcategories', 'manageSubcategories', 'getLeads', 'manageLeads', 'getBankAccounts', 'manageBankAccounts', 'getTransactions', 'manageTransactions', 'getCommissions', 'manageCommissions', 'getNotifications', 'manageNotifications', 'getSettings', 'manageSettings', 'manageRoles', 'getRoles', 'managePermissions', 'getPermissions']
+    permissions: [
+      'getUsers', 'manageUsers', 'manageAdmins',
+      'getProducts', 'manageProducts',
+      'getCategories', 'manageCategories',
+      'getSubcategories', 'manageSubcategories',
+      'getLeads', 'manageLeads',
+      'getBankAccounts', 'manageBankAccounts',
+      'getTransactions', 'manageTransactions',
+      'getCommissions', 'manageCommissions',
+      'getNotifications', 'manageNotifications',
+      'getSettings', 'manageSettings',
+      'manageRoles', 'getRoles',
+      'managePermissions', 'getPermissions',
+      'accessAdminPanel', 'adminViewUsers', 'adminManageKyc'
+    ]
   }
 ];
 
@@ -34,6 +62,12 @@ const initRoles = async () => {
     const permissions = await Permission.find({});
     const permissionMap = new Map(permissions.map(p => [p.name, p._id]));
 
+    // For superAdmin, ensure ALL permissions are assigned
+    if (permissions.length > defaultRoles[2].permissions.length) {
+      console.log('Adding all available permissions to superAdmin');
+      defaultRoles[2].permissions = permissions.map(p => p.name);
+    }
+
     // Create roles and assign permissions
     for (const roleData of defaultRoles) {
       const role = await Role.create({
@@ -41,20 +75,34 @@ const initRoles = async () => {
         description: roleData.description
       });
 
-      const rolePermissions = roleData.permissions.map(permissionName => ({
-        roleId: role._id,
-        permissionId: permissionMap.get(permissionName)
-      }));
+      const validPermissions = roleData.permissions
+        .filter(permName => permissionMap.has(permName))
+        .map(permName => ({
+          roleId: role._id,
+          permissionId: permissionMap.get(permName)
+        }));
 
-      await RolePermission.insertMany(rolePermissions);
-      console.log(`Created role ${role.name} with ${rolePermissions.length} permissions`);
+      if (validPermissions.length > 0) {
+        await RolePermission.insertMany(validPermissions);
+      }
+      
+      console.log(`Created role ${role.name} with ${validPermissions.length} permissions`);
     }
 
-    process.exit(0);
+    return true;
   } catch (error) {
     console.error('Error initializing roles:', error);
-    process.exit(1);
+    return false;
   }
 };
 
-initRoles(); 
+// Execute if this file is run directly (not imported)
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMainModule) {
+  initRoles().then((success) => {
+    mongoose.connection.close();
+    process.exit(success ? 0 : 1);
+  });
+}
+
+export default initRoles; 

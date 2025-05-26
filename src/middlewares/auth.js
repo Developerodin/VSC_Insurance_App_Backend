@@ -47,6 +47,40 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
       return resolve();
     }
     
+    // Special debugging for rolePermission routes that are giving 403 errors
+    const isRolePermissionRoute = req.originalUrl.includes('/role-permissions/roles/');
+    if (isRolePermissionRoute) {
+      console.log('========== DEBUGGING ROLE PERMISSION ROUTE ==========');
+      console.log('URL:', req.originalUrl);
+      console.log('Method:', req.method);
+      console.log('User ID:', user.id);
+      console.log('User role:', user.role);
+      console.log('Required rights:', JSON.stringify(requiredRights));
+      
+      // Always allow superAdmin to access role permission routes
+      if (user.role === 'superAdmin') {
+        console.log('SuperAdmin override for role-permission routes - granting access');
+        return resolve();
+      }
+      
+      // Check if the roleId in the URL matches a role that belongs to this user
+      // This allows users to access their own role's permissions
+      const roleIdMatch = req.originalUrl.match(/\/roles\/([^\/]+)\/permissions/);
+      if (roleIdMatch && roleIdMatch[1]) {
+        const roleId = roleIdMatch[1];
+        try {
+          // Find user's role
+          const role = await Role.findOne({ name: user.role });
+          if (role && role._id.toString() === roleId) {
+            console.log('User is accessing their own role permissions - granting access');
+            return resolve();
+          }
+        } catch (error) {
+          console.error('Error checking role ID:', error);
+        }
+      }
+    }
+    
     console.log('Auth check for:', req.method, req.originalUrl);
     console.log('User role:', user.role);
     console.log('Required permissions:', JSON.stringify(requiredRights));
