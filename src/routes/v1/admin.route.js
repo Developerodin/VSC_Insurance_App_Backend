@@ -8,11 +8,11 @@ const router = express.Router();
 
 router
   .route('/users')
-  .get(auth('manageUsers'), validate(adminValidation.getUsers), adminController.getUsers);
+  .get(auth('manageUsers', 'getUsers'), validate(adminValidation.getUsers), adminController.getUsers);
 
 router
   .route('/users/:userId')
-  .get(auth('manageUsers'), validate(adminValidation.getUser), adminController.getUser)
+  .get(auth('manageUsers', 'getUsers'), validate(adminValidation.getUser), adminController.getUser)
   .patch(auth('manageUsers'), validate(adminValidation.updateUser), adminController.updateUser);
 
 router
@@ -35,4 +35,4 @@ router
   .route('/kyc/stats')
   .get(auth('manageUsers'), validate(adminValidation.getKycStats), adminController.getKycStats);
 
-export default router; 
+export default router;

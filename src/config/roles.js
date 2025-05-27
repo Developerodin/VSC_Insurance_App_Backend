@@ -1,8 +1,8 @@
 export const roles = ['user', 'admin', 'superAdmin'];
 
 export const roleRights = new Map();
-roleRights.set(roles[0], ['getUsers']);
-roleRights.set(roles[1], ['getUsers', 'manageUsers', 'getRoles']);
+roleRights.set(roles[0], ['getUsers', 'getProducts', 'getCategories', 'getSubcategories']);
+roleRights.set(roles[1], ['getUsers', 'manageUsers', 'getRoles', 'getProducts', 'getCategories', 'getSubcategories']);
 roleRights.set(roles[2], [
   'getUsers', 
   'manageUsers', 

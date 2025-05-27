@@ -1,12 +1,18 @@
 import mongoose from 'mongoose';
 import * as config from '../config/config.js';
 import { Permission } from '../models/index.js';
+import { fileURLToPath } from 'url';
 
 const defaultPermissions = [
   // User Management
   { name: 'getUsers', description: 'Can view users', module: 'users' },
   { name: 'manageUsers', description: 'Can manage users', module: 'users' },
   { name: 'manageAdmins', description: 'Can manage admins', module: 'users' },
+  
+  // Admin Routes
+  { name: 'accessAdminPanel', description: 'Can access admin panel', module: 'admin' },
+  { name: 'adminViewUsers', description: 'Can view users in admin panel', module: 'admin' },
+  { name: 'adminManageKyc', description: 'Can manage KYC in admin panel', module: 'admin' },
   
   // Product Management
   { name: 'manageProducts', description: 'Can manage products', module: 'products' },
@@ -64,11 +70,23 @@ const initPermissions = async () => {
     const permissions = await Permission.insertMany(defaultPermissions);
     console.log(`Inserted ${permissions.length} default permissions`);
 
-    process.exit(0);
+    return true;
   } catch (error) {
     console.error('Error initializing permissions:', error);
-    process.exit(1);
+    return false;
+  } finally {
+    // Don't close the connection here to allow chaining with other operations
   }
 };
 
-initPermissions(); 
+// Execute if this file is run directly (not imported)
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMainModule) {
+  initPermissions().then((success) => {
+    // Only close the connection if running as main module
+    mongoose.connection.close();
+    process.exit(success ? 0 : 1);
+  });
+}
+
+export default initPermissions; 

@@ -44,13 +44,31 @@ const assignPermissionsToRole = async (roleId, permissionIds) => {
  * @returns {Promise<Array<Permission>>}
  */
 const getPermissionsForRole = async (roleId) => {
-  const role = await Role.findById(roleId);
-  if (!role) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Role not found');
+  console.log('Getting permissions for role ID:', roleId);
+  
+  try {
+    const role = await Role.findById(roleId);
+    if (!role) {
+      console.log('Role not found with ID:', roleId);
+      throw new ApiError(httpStatus.NOT_FOUND, 'Role not found');
+    }
+    
+    console.log('Found role:', role.name);
+    
+    const rolePermissions = await RolePermission.find({ roleId }).populate('permissionId');
+    console.log('Found rolePermissions count:', rolePermissions.length);
+    
+    const permissions = rolePermissions
+      .filter(rp => rp.permissionId) // Filter out any null permissionIds
+      .map(rp => rp.permissionId);
+      
+    console.log('Returning permissions count:', permissions.length);
+    
+    return permissions;
+  } catch (error) {
+    console.error('Error in getPermissionsForRole:', error);
+    throw error;
   }
-
-  const rolePermissions = await RolePermission.find({ roleId }).populate('permissionId');
-  return rolePermissions.map((rp) => rp.permissionId);
 };
 
 /**

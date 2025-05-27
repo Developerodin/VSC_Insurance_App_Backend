@@ -2,6 +2,8 @@ import httpStatus from 'http-status';
 
 import ApiError from '../utils/ApiError.js';
 import User from '../models/user.model.js';
+import * as rolePermissionService from './rolePermission.service.js';
+import { Role } from '../models/index.js';
 
 
 /**
@@ -81,6 +83,28 @@ const deleteUserById = async (userId) => {
   return user;
 };
 
+/**
+ * Get user permissions based on their role
+ * @param {ObjectId} userId
+ * @returns {Promise<Array>}
+ */
+const getUserPermissions = async (userId) => {
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  // Find the role object for this user
+  const role = await Role.findOne({ name: user.role });
+  if (!role) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Role not found');
+  }
+  
+  // Get permissions for this role
+  const permissions = await rolePermissionService.getPermissionsForRole(role.id);
+  return permissions.map(permission => permission.name);
+};
+
 export {
   createUser,
   queryUsers,
@@ -88,5 +112,6 @@ export {
   getUserByEmail,
   updateUserById,
   deleteUserById,
+  getUserPermissions,
 };
 

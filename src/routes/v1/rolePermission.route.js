@@ -6,15 +6,20 @@ import rolePermissionController from '../../controllers/rolePermission.controlle
 
 const router = express.Router();
 
+// Route for getting current user's role permissions - available to all authenticated users
+router
+  .route('/my-permissions')
+  .get(auth(), rolePermissionController.getMyRolePermissions);
+
 router
   .route('/roles/:roleId/permissions')
   .post(
-    auth('manageRoles'),
+    auth('manageRoles', 'managePermissions'),
     validate(rolePermissionValidation.assignPermissionsToRole),
     rolePermissionController.assignPermissionsToRole
   )
   .get(
-    auth('getRoles'),
+    auth('getRoles', 'getPermissions', 'manageRoles', 'managePermissions'),
     validate(rolePermissionValidation.getPermissionsForRole),
     rolePermissionController.getPermissionsForRole
   );
@@ -22,7 +27,7 @@ router
 router
   .route('/roles/:roleId/permissions/:permissionId')
   .delete(
-    auth('manageRoles'),
+    auth('manageRoles', 'managePermissions'),
     validate(rolePermissionValidation.removePermissionFromRole),
     rolePermissionController.removePermissionFromRole
   );
