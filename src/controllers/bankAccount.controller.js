@@ -9,6 +9,13 @@ export const createBankAccount = catchAsync(async (req, res) => {
     agent: req.user.id,
   });
 
+  // Add bank account reference to user
+  const user = await User.findById(req.user.id);
+  if (user) {
+    user.bankAccounts.push(bankAccount._id);
+    await user.save();
+  }
+
   res.status(httpStatus.CREATED).send(bankAccount);
 });
 
@@ -60,6 +67,14 @@ export const deleteBankAccount = catchAsync(async (req, res) => {
   if (bankAccount.agent.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
+
+  // Remove bank account reference from user
+  const user = await User.findById(bankAccount.agent);
+  if (user) {
+    user.bankAccounts.pull(req.params.bankAccountId);
+    await user.save();
+  }
+
   await bankAccount.remove();
   res.status(httpStatus.NO_CONTENT).send();
 });

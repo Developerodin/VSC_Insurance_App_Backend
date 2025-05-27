@@ -6,9 +6,9 @@ const createBankAccount = {
     accountHolderName: Joi.string().required(),
     accountNumber: Joi.string().required(),
     bankName: Joi.string().required(),
-    branchName: Joi.string().required(),
     ifscCode: Joi.string().pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/).required(),
-    accountType: Joi.string().valid('savings', 'current', 'salary').required(),
+    branchName: Joi.string().allow(null, ''),
+    accountType: Joi.string().valid('savings', 'current', 'salary').allow(null, ''),
     status: Joi.string().valid('pending', 'verified', 'rejected').default('pending'),
     isDefault: Joi.boolean().default(false),
     documents: Joi.array().items(Joi.object().keys({
@@ -16,7 +16,7 @@ const createBankAccount = {
       url: Joi.string().required(),
       type: Joi.string().required(),
       verified: Joi.boolean().default(false),
-    })),
+    })).allow(null),
   }),
 };
 
@@ -43,9 +43,9 @@ const updateBankAccount = {
     accountHolderName: Joi.string(),
     accountNumber: Joi.string(),
     bankName: Joi.string(),
-    branchName: Joi.string(),
     ifscCode: Joi.string().pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/),
-    accountType: Joi.string().valid('savings', 'current', 'salary'),
+    branchName: Joi.string().allow(null, ''),
+    accountType: Joi.string().valid('savings', 'current', 'salary').allow(null, ''),
     status: Joi.string().valid('pending', 'verified', 'rejected'),
     isDefault: Joi.boolean(),
     documents: Joi.array().items(Joi.object().keys({
@@ -53,7 +53,7 @@ const updateBankAccount = {
       url: Joi.string().required(),
       type: Joi.string().required(),
       verified: Joi.boolean(),
-    })),
+    })).allow(null),
   }),
 };
 

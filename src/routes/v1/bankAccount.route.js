@@ -10,14 +10,14 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(auth('manageBankAccounts'), validate(bankAccountValidation.createBankAccount), bankAccountController.createBankAccount)
+  .post(auth('getBankAccounts'), validate(bankAccountValidation.createBankAccount), bankAccountController.createBankAccount)
   .get(auth('getBankAccounts'), validate(bankAccountValidation.getBankAccounts), bankAccountController.getBankAccounts);
 
 router
   .route('/:bankAccountId')
   .get(auth('getBankAccounts'), validate(bankAccountValidation.getBankAccount), bankAccountController.getBankAccount)
-  .patch(auth('manageBankAccounts'), validate(bankAccountValidation.updateBankAccount), bankAccountController.updateBankAccount)
-  .delete(auth('manageBankAccounts'), validate(bankAccountValidation.deleteBankAccount), bankAccountController.deleteBankAccount);
+  .patch(auth('getBankAccounts'), validate(bankAccountValidation.updateBankAccount), bankAccountController.updateBankAccount)
+  .delete(auth('getBankAccounts'), validate(bankAccountValidation.deleteBankAccount), bankAccountController.deleteBankAccount);
 
 router
   .route('/:bankAccountId/verify')
@@ -25,10 +25,10 @@ router
 
 router
   .route('/:bankAccountId/default')
-  .post(auth('manageBankAccounts'), validate(bankAccountValidation.setDefaultBankAccount), bankAccountController.setDefaultBankAccount);
+  .post(auth('getBankAccounts'), validate(bankAccountValidation.setDefaultBankAccount), bankAccountController.setDefaultBankAccount);
 
 router
   .route('/:bankAccountId/documents')
-  .post(auth('manageBankAccounts'), validate(bankAccountValidation.uploadBankAccountDocument), bankAccountController.uploadBankAccountDocument);
+  .post(auth('getBankAccounts'), validate(bankAccountValidation.uploadBankAccountDocument), bankAccountController.uploadBankAccountDocument);
 
   export default router; 

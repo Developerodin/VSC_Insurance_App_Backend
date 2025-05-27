@@ -43,6 +43,31 @@ router
   .route('/:userId/onboarding/status')
   .get( validate(userValidation.getOnboardingStatus), userController.getOnboardingStatus);
 
+// Bank Account Routes for User
+router
+  .route('/:userId/bank-accounts')
+  .post(auth('getBankAccounts'), validate(userValidation.createUserBankAccount), userController.createUserBankAccount)
+  .get(auth('getBankAccounts'), validate(userValidation.getUserBankAccounts), userController.getUserBankAccounts);
+
+router
+  .route('/:userId/bank-accounts/:bankAccountId')
+  .get(auth('getBankAccounts'), validate(userValidation.getUserBankAccount), userController.getUserBankAccount)
+  .patch(auth('getBankAccounts'), validate(userValidation.updateUserBankAccount), userController.updateUserBankAccount)
+  .delete(auth('getBankAccounts'), validate(userValidation.deleteUserBankAccount), userController.deleteUserBankAccount);
+
+router
+  .route('/:userId/bank-accounts/:bankAccountId/default')
+  .post(auth('getBankAccounts'), validate(userValidation.setUserDefaultBankAccount), userController.setUserDefaultBankAccount);
+
+router
+  .route('/:userId/bank-accounts/:bankAccountId/documents')
+  .post(auth('getBankAccounts'), validate(userValidation.uploadUserBankAccountDocument), userController.uploadUserBankAccountDocument);
+
+// Change Password Route
+router
+  .route('/:userId/change-password')
+  .post(auth('getUsers'), validate(userValidation.changePassword), userController.changePassword);
+
 router.post('/login', validate(authValidation.login), authController.login);
 
 export default router;
