@@ -21,12 +21,21 @@ export const createLead = catchAsync(async (req, res) => {
     },
   });
 
-  res.status(httpStatus.CREATED).send(lead);
+  // Populate and return the created lead
+  const populatedLead = await Lead.findById(lead._id)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+
+  res.status(httpStatus.CREATED).send(populatedLead);
 });
 
 export const getLeads = catchAsync(async (req, res) => {
   const filter = {};
-  const options = {};
+  const options = {
+    populate: 'agent,category,subcategory,products.product'
+  };
 
   // Filter by agent if not admin
   if (req.user.role !== 'admin') {
@@ -42,22 +51,28 @@ export const getLeads = catchAsync(async (req, res) => {
 });
 
 export const getLead = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  const lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
   res.send(lead);
 });
 
 export const updateLead = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
 
@@ -68,7 +83,7 @@ export const updateLead = catchAsync(async (req, res) => {
   // Create notification if status changed
   if (oldStatus !== lead.status) {
     await Notification.create({
-      recipient: lead.agent,
+      recipient: lead.agent._id,
       type: 'lead_status_change',
       title: 'Lead Status Updated',
       message: `Lead status has been updated to: ${lead.status}`,
@@ -81,27 +96,36 @@ export const updateLead = catchAsync(async (req, res) => {
     });
   }
 
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+
   res.send(lead);
 });
 
 export const deleteLead = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  const lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
-  await lead.remove();
+  await lead.deleteOne();
   res.status(httpStatus.NO_CONTENT).send();
 });
 
 export const addFollowUp = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
 
@@ -113,7 +137,7 @@ export const addFollowUp = catchAsync(async (req, res) => {
 
   // Create notification for follow-up
   await Notification.create({
-    recipient: lead.agent,
+    recipient: lead.agent._id,
     type: 'follow_up_reminder',
     title: 'Follow-up Added',
     message: `A new follow-up has been added for lead: ${lead.customerName}`,
@@ -124,15 +148,23 @@ export const addFollowUp = catchAsync(async (req, res) => {
     },
   });
 
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+
   res.send(lead);
 });
 
 export const addNote = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
 
@@ -141,6 +173,14 @@ export const addNote = catchAsync(async (req, res) => {
     createdBy: req.user.id,
   });
   await lead.save();
+  
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
   res.send(lead);
 });
 
@@ -165,7 +205,7 @@ export const getLeadStats = catchAsync(async (req, res) => {
 
 export const assignLead = catchAsync(async (req, res) => {
   const { agentId } = req.body;
-  const lead = await Lead.findById(req.params.leadId);
+  let lead = await Lead.findById(req.params.leadId);
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
@@ -190,12 +230,21 @@ export const assignLead = catchAsync(async (req, res) => {
     },
   });
 
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+
   res.send(lead);
 });
 
 export const getLeadsByUserId = catchAsync(async (req, res) => {
   const filter = { agent: req.params.userId };
-  const options = {};
+  const options = {
+    populate: 'agent,category,subcategory,products.product'
+  };
 
   if (req.query.status) filter.status = req.query.status;
   if (req.query.source) filter.source = req.query.source;
@@ -206,11 +255,12 @@ export const getLeadsByUserId = catchAsync(async (req, res) => {
 });
 
 export const updateLeadFields = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
 
@@ -228,15 +278,24 @@ export const updateLeadFields = catchAsync(async (req, res) => {
   }
   
   await lead.save();
+  
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
   res.send(lead);
 });
 
 export const updateLeadProducts = catchAsync(async (req, res) => {
-  const lead = await Lead.findById(req.params.leadId);
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
 
@@ -245,5 +304,13 @@ export const updateLeadProducts = catchAsync(async (req, res) => {
   }
   
   await lead.save();
+  
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
   res.send(lead);
 }); 

@@ -360,3 +360,49 @@
 {"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:41:59"}
 {"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:41:59"}
 {"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:42:01"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:44:04"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:44:04"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:44:06"}
+{"message":"GET /v1/leads/user/683409f39d736c06c8a030d0 200 - 206.248 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:44:15"}
+{"message":"GET /v1/leads/ 200 - 162.046 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:44:19"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.765 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:28"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.472 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:28"}
+{"message":"GET /v1/leadsfields 304 - 74.981 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:28"}
+{"message":"GET /v1/leadsfields 304 - 68.339 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:28"}
+{"message":"OPTIONS /v1/users 204 - 0.239 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"OPTIONS /v1/products 204 - 0.295 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"OPTIONS /v1/users 204 - 0.246 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"OPTIONS /v1/leads 204 - 0.202 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"OPTIONS /v1/products 204 - 0.251 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"OPTIONS /v1/leads 204 - 0.216 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"GET /v1/products 304 - 152.087 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"GET /v1/leads 200 - 166.381 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"GET /v1/users 200 - 167.577 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"GET /v1/products 304 - 165.258 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:30"}
+{"message":"GET /v1/users 304 - 151.447 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:31"}
+{"message":"GET /v1/leads 304 - 161.389 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:31"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.192 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.176 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"GET /v1/leadsfields 304 - 63.486 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"GET /v1/leadsfields 304 - 62.138 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/users 204 - 0.368 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/products 204 - 0.210 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/leads 204 - 0.371 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/users 204 - 0.170 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/products 204 - 0.175 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"OPTIONS /v1/leads 204 - 0.186 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:52"}
+{"message":"GET /v1/users 304 - 168.771 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:53"}
+{"message":"GET /v1/leads 304 - 175.456 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:53"}
+{"message":"GET /v1/products 304 - 181.010 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:53"}
+{"message":"GET /v1/users 304 - 154.700 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:53"}
+{"message":"GET /v1/leads 304 - 171.661 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:53"}
+{"message":"GET /v1/products 304 - 184.660 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:50:53"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:53:48"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:53:48"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:53:50"}
+{"statusCode":500,"message":"options.populate.split is not a function","status":"error","isOperational":true,"level":"error","service":"vsc-insurance-app","timestamp":"2025-05-29 15:54:10","stack":"Error: options.populate.split is not a function\n    at errorConverter (file:///D:/Projects/VSC_Insurance_App/Vsc_backend/src/middlewares/error.js:14:13)\n    at Layer.handle_error (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\layer.js:71:5)\n    at trim_prefix (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:315:13)\n    at D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:284:7\n    at Function.process_params (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:335:12)\n    at next (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:275:10)\n    at Layer.handle_error (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\layer.js:67:12)\n    at trim_prefix (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:315:13)\n    at D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:284:7\n    at Function.process_params (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:335:12)\n    at next (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:275:10)\n    at D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:635:15\n    at next (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:260:14)\n    at D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:635:15\n    at next (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\index.js:260:14)\n    at next (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\express\\lib\\router\\route.js:127:14)"}
+{"message":"GET /v1/leads/user/683409f39d736c06c8a030d0 500 - 183.242 ms - message: options.populate.split is not a function","level":"error","service":"vsc-insurance-app","timestamp":"2025-05-29 15:54:10"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:54:57"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:54:57"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:55:00"}
+{"message":"GET /v1/leads/user/683409f39d736c06c8a030d0 200 - 316.364 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:55:00"}
