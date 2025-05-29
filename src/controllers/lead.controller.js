@@ -37,11 +37,6 @@ export const getLeads = catchAsync(async (req, res) => {
     populate: 'agent,category,subcategory,products.product'
   };
 
-  // Filter by agent if not admin
-  if (req.user.role !== 'admin') {
-    filter.agent = req.user.id;
-  }
-
   if (req.query.status) filter.status = req.query.status;
   if (req.query.source) filter.source = req.query.source;
   if (req.query.category) filter.category = req.query.category;
@@ -60,9 +55,7 @@ export const getLead = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
   res.send(lead);
 });
 
@@ -72,9 +65,7 @@ export const updateLead = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin'&& req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   const oldStatus = lead.status;
   Object.assign(lead, req.body);
@@ -112,9 +103,7 @@ export const deleteLead = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin'&& req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
   await lead.deleteOne();
   res.status(httpStatus.NO_CONTENT).send();
 });
@@ -125,9 +114,7 @@ export const addFollowUp = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin'&& req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   lead.followUps.push({
     ...req.body,
@@ -164,9 +151,7 @@ export const addNote = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin'&& req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   lead.notes.push({
     content: req.body.content,
@@ -260,9 +245,7 @@ export const updateLeadFields = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   // Update fieldsData with new values
   if (req.body.fieldsData) {
@@ -295,9 +278,7 @@ export const updateLeadProducts = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   if (req.body.products) {
     lead.products = req.body.products;
