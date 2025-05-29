@@ -37,4 +37,9 @@ router
   .route('/:leadId/products')
   .patch(auth('manageLeads'), validate(leadValidation.updateLeadProducts), leadController.updateLeadProducts);
 
+// New route for lead timeline
+router
+  .route('/:leadId/timeline')
+  .get(auth('getLeads'), validate(leadValidation.getLead), leadController.getLeadTimeline);
+
 export default router; 
