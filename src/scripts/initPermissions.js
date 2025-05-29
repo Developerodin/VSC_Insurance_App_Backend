@@ -28,6 +28,10 @@ const defaultPermissions = [
   { name: 'manageLeads', description: 'Can manage leads', module: 'leads' },
   { name: 'getLeads', description: 'Can view leads', module: 'leads' },
   
+  // LeadsFields Management
+  { name: 'manageLeadsFields', description: 'Can manage leads fields configuration', module: 'leadsFields' },
+  { name: 'getLeadsFields', description: 'Can view leads fields configuration', module: 'leadsFields' },
+  
   // Bank Account Management
   { name: 'manageBankAccounts', description: 'Can manage bank accounts', module: 'bankAccounts' },
   { name: 'getBankAccounts', description: 'Can view bank accounts', module: 'bankAccounts' },

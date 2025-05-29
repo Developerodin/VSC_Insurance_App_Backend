@@ -11,6 +11,7 @@ import Subcategory from './subcategory.model.js';
 import Role from './role.model.js';
 import Permission from './permission.model.js';
 import RolePermission from './rolePermission.model.js';
+import LeadsFields from './leadsFields.model.js';
 
 export {
   User,
@@ -26,5 +27,6 @@ export {
   Role,
   Permission,
   RolePermission,
+  LeadsFields,
 };
 

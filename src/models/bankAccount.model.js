@@ -25,7 +25,7 @@ const bankAccountSchema = mongoose.Schema(
     },
     branchName: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     ifscCode: {
@@ -42,7 +42,7 @@ const bankAccountSchema = mongoose.Schema(
     accountType: {
       type: String,
       enum: ['savings', 'current', 'salary'],
-      required: true,
+      required: false,
     },
     status: {
       type: String,

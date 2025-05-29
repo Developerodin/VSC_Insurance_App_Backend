@@ -30,6 +30,7 @@ const updateRolePermissions = async () => {
         'getCategories',
         'getSubcategories',
         'getLeads',
+        'getLeadsFields',
         'getBankAccounts',
         'getTransactions',
         'getCommissions',
@@ -51,6 +52,9 @@ const updateRolePermissions = async () => {
         // Lead permissions
         'getLeads',
         'manageLeads',
+        // LeadsFields permissions
+        'getLeadsFields',
+        'manageLeadsFields',
         // Bank account permissions
         'getBankAccounts',
         'manageBankAccounts',
@@ -86,6 +90,8 @@ const updateRolePermissions = async () => {
         'manageSubcategories',
         'getLeads',
         'manageLeads',
+        'getLeadsFields',
+        'manageLeadsFields',
         'getBankAccounts',
         'manageBankAccounts',
         'getTransactions',

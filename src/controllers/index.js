@@ -7,6 +7,7 @@ import * as commissionController from './commission.controller.js';
 import * as bankAccountController from './bankAccount.controller.js';
 import * as notificationController from './notification.controller.js';
 import * as transactionController from './transaction.controller.js';
+import * as leadsFieldsController from './leadsFields.controller.js';
 
 export {
   authController,
@@ -18,5 +19,6 @@ export {
   bankAccountController,
   notificationController,
   transactionController,
+  leadsFieldsController,
 };
 
