@@ -18,19 +18,23 @@ router
   .delete(auth('manageLeads'), validate(leadValidation.deleteLead), leadController.deleteLead);
 
 router
-  .route('/:leadId/follow-up')
-  .post(auth('manageLeads'), validate(leadValidation.addFollowUp), leadController.addFollowUp);
-
-router
-  .route('/:leadId/notes')
-  .post(auth('manageLeads'), validate(leadValidation.addNote), leadController.addNote);
-
-router
   .route('/stats')
   .get(auth('getLeads'), validate(leadValidation.getLeadStats), leadController.getLeadStats);
 
 router
   .route('/:leadId/assign')
   .post(auth('manageLeads'), validate(leadValidation.assignLead), leadController.assignLead);
+
+router
+  .route('/user/:userId')
+  .get(auth('getLeads'), validate(leadValidation.getLeadsByUserId), leadController.getLeadsByUserId);
+
+router
+  .route('/:leadId/fields')
+  .patch(auth('manageLeads'), validate(leadValidation.updateLeadFields), leadController.updateLeadFields);
+
+router
+  .route('/:leadId/products')
+  .patch(auth('manageLeads'), validate(leadValidation.updateLeadProducts), leadController.updateLeadProducts);
 
 export default router; 

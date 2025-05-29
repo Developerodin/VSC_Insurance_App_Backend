@@ -8,21 +8,6 @@ const leadSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    customerName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-    },
-    mobileNumber: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     status: {
       type: String,
       enum: ['new', 'contacted', 'interested', 'followUp', 'qualified', 'proposal', 'negotiation', 'closed', 'lost'],
@@ -33,6 +18,15 @@ const leadSchema = mongoose.Schema(
       enum: ['direct', 'referral', 'website', 'social', 'other'],
       required: true,
     },
+    category: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Category',
+      required: true,
+    },
+    subcategory: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Subcategory',
+    },
     products: [{
       product: {
         type: mongoose.SchemaTypes.ObjectId,
@@ -42,76 +36,18 @@ const leadSchema = mongoose.Schema(
         type: String,
         enum: ['interested', 'proposed', 'sold', 'rejected'],
       },
-      notes: String,
     }],
-    requirements: {
-      type: String,
+    // Dynamic fields submitted by the user
+    fieldsData: {
+      type: Map,
+      of: mongoose.Schema.Types.Mixed,
+      default: {},
     },
-    budget: {
-      amount: Number,
-      currency: {
-        type: String,
-        default: 'INR',
-      },
-    },
-    followUps: [{
-      date: {
-        type: Date,
-        required: true,
-      },
-      notes: String,
-      status: {
-        type: String,
-        enum: ['pending', 'completed', 'cancelled'],
-        default: 'pending',
-      },
-      agent: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
-      },
-    }],
-    documents: [{
-      name: String,
-      url: String,
-      type: String,
-      uploadedAt: {
-        type: Date,
-        default: Date.now,
-      },
-    }],
-    notes: [{
-      content: String,
-      createdBy: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-    }],
     lastContact: {
       type: Date,
     },
     nextFollowUp: {
       type: Date,
-    },
-    address: {
-      street: String,
-      city: String,
-      state: String,
-      pincode: String,
-      country: {
-        type: String,
-        default: 'India',
-      },
-    },
-    tags: [{
-      type: String,
-    }],
-    metadata: {
-      type: Map,
-      of: mongoose.Schema.Types.Mixed,
     },
   },
   {
@@ -122,6 +58,11 @@ const leadSchema = mongoose.Schema(
 // add plugin that converts mongoose to json
 leadSchema.plugin(toJSON);
 leadSchema.plugin(paginate);
+
+// Create compound index for category and product
+leadSchema.index({ category: 1, 'products.product': 1 });
+leadSchema.index({ agent: 1 });
+leadSchema.index({ status: 1 });
 
 /**
  * @typedef Lead

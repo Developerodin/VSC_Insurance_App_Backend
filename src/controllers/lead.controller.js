@@ -14,7 +14,7 @@ export const createLead = catchAsync(async (req, res) => {
     recipient: req.user.id,
     type: 'lead_assigned',
     title: 'New Lead Assigned',
-    message: `A new lead has been assigned to you: ${lead.customerName}`,
+    message: `A new lead has been assigned to you`,
     channels: ['in_app', 'email'],
     data: {
       leadId: lead._id,
@@ -35,6 +35,7 @@ export const getLeads = catchAsync(async (req, res) => {
 
   if (req.query.status) filter.status = req.query.status;
   if (req.query.source) filter.source = req.query.source;
+  if (req.query.category) filter.category = req.query.category;
 
   const leads = await Lead.paginate(filter, options);
   res.send(leads);
@@ -182,12 +183,67 @@ export const assignLead = catchAsync(async (req, res) => {
     recipient: agentId,
     type: 'lead_assigned',
     title: 'Lead Assigned',
-    message: `A lead has been assigned to you: ${lead.customerName}`,
+    message: `A lead has been assigned to you`,
     channels: ['in_app', 'email'],
     data: {
       leadId: lead._id,
     },
   });
 
+  res.send(lead);
+});
+
+export const getLeadsByUserId = catchAsync(async (req, res) => {
+  const filter = { agent: req.params.userId };
+  const options = {};
+
+  if (req.query.status) filter.status = req.query.status;
+  if (req.query.source) filter.source = req.query.source;
+  if (req.query.category) filter.category = req.query.category;
+
+  const leads = await Lead.paginate(filter, options);
+  res.send(leads);
+});
+
+export const updateLeadFields = catchAsync(async (req, res) => {
+  const lead = await Lead.findById(req.params.leadId);
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+  }
+
+  // Update fieldsData with new values
+  if (req.body.fieldsData) {
+    // If fieldsData doesn't exist, create it
+    if (!lead.fieldsData) {
+      lead.fieldsData = new Map();
+    }
+    
+    // Loop through and update each field
+    Object.entries(req.body.fieldsData).forEach(([key, value]) => {
+      lead.fieldsData.set(key, value);
+    });
+  }
+  
+  await lead.save();
+  res.send(lead);
+});
+
+export const updateLeadProducts = catchAsync(async (req, res) => {
+  const lead = await Lead.findById(req.params.leadId);
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+  if (lead.agent.toString() !== req.user.id && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+  }
+
+  if (req.body.products) {
+    lead.products = req.body.products;
+  }
+  
+  await lead.save();
   res.send(lead);
 }); 

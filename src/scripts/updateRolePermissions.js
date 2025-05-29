@@ -35,7 +35,8 @@ const updateRolePermissions = async () => {
         'getTransactions',
         'getCommissions',
         'getNotifications',
-        'getSettings'
+        'getSettings',
+        'manageLeads'
       ],
       admin: [
         // User permissions
@@ -75,7 +76,8 @@ const updateRolePermissions = async () => {
         // Admin panel permissions
         'accessAdminPanel',
         'adminViewUsers',
-        'adminManageKyc'
+        'adminManageKyc',
+     
       ],
       superAdmin: [
         // All permissions
@@ -108,7 +110,8 @@ const updateRolePermissions = async () => {
         'managePermissions',
         'accessAdminPanel',
         'adminViewUsers',
-        'adminManageKyc'
+        'adminManageKyc',
+      
       ]
     };
 

@@ -229,3 +229,134 @@
 {"statusCode":401,"message":"Please authenticate","status":"fail","isOperational":true,"level":"error","service":"vsc-insurance-app","timestamp":"2025-05-26 12:09:21","stack":"Error: Please authenticate\n    at file:///D:/Projects/VSC_Insurance_App/Vsc_backend/src/middlewares/auth.js:39:21\n    at allFailed (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\passport\\lib\\middleware\\authenticate.js:107:18)\n    at attempt (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\passport\\lib\\middleware\\authenticate.js:180:28)\n    at strategy.fail (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\passport\\lib\\middleware\\authenticate.js:302:9)\n    at verified (D:\\Projects\\VSC_Insurance_App\\Vsc_backend\\node_modules\\passport-jwt\\lib\\strategy.js:113:41)\n    at JwtStrategy._verify (file:///D:/Projects/VSC_Insurance_App/Vsc_backend/src/config/passport.js:19:16)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"}
 {"message":"GET /v1/role-permissions/roles/682abdda80064306f848a363/permissions 401 - 37.864 ms - message: Please authenticate","level":"error","service":"vsc-insurance-app","timestamp":"2025-05-26 12:09:21"}
 {"message":"GET /v1/role-permissions/roles/682abdda80064306f848a363/permissions 200 - 151.649 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-26 12:09:31"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 11:15:25"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 11:15:25"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 11:15:27"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:40:49"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:43:11"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:43:38"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:43:38"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 14:43:40"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:46"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:46"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:48"}
+{"message":"OPTIONS /v1/leadsfields 204 - 2.781 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:56"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.811 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:57"}
+{"message":"GET /v1/leadsfields 200 - 121.956 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:57"}
+{"message":"GET /v1/leadsfields 304 - 76.786 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:57"}
+{"message":"OPTIONS /v1/transactions 204 - 0.200 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:59"}
+{"message":"OPTIONS /v1/transactions 204 - 0.185 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:59"}
+{"message":"GET /v1/transactions 200 - 215.439 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:59"}
+{"message":"GET /v1/transactions 304 - 164.303 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:44:59"}
+{"message":"OPTIONS /v1/users 204 - 0.211 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:02"}
+{"message":"OPTIONS /v1/users 204 - 0.217 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:02"}
+{"message":"GET /v1/users 200 - 159.362 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:02"}
+{"message":"GET /v1/users 304 - 135.428 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:03"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.500 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:40"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.221 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:40"}
+{"message":"GET /v1/leadsfields 304 - 64.801 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:41"}
+{"message":"GET /v1/leadsfields 304 - 66.832 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:41"}
+{"message":"OPTIONS /v1/leadsfields 204 - 0.944 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:56"}
+{"message":"OPTIONS /v1/leadsfields 204 - 1.077 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:56"}
+{"message":"GET /v1/leadsfields 304 - 70.329 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:56"}
+{"message":"GET /v1/leadsfields 304 - 72.320 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:56"}
+{"message":"OPTIONS /v1/products 204 - 0.341 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"OPTIONS /v1/categories?limit=100 204 - 0.256 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"OPTIONS /v1/leadsfields/6836fb530617b60060b45b48 204 - 0.438 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"OPTIONS /v1/products 204 - 0.444 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"OPTIONS /v1/categories?limit=100 204 - 0.309 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"OPTIONS /v1/leadsfields/6836fb530617b60060b45b48 204 - 0.201 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"GET /v1/leadsfields/6836fb530617b60060b45b48 200 - 95.734 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"GET /v1/leadsfields/6836fb530617b60060b45b48 304 - 91.110 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"GET /v1/products 200 - 213.262 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"GET /v1/categories?limit=100 200 - 223.330 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"GET /v1/products 304 - 165.490 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:45:59"}
+{"message":"GET /v1/categories?limit=100 304 - 175.884 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:46:00"}
+{"message":"OPTIONS /v1/categories?limit=100 204 - 0.212 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:40"}
+{"message":"OPTIONS /v1/categories?limit=100 204 - 0.221 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:40"}
+{"message":"GET /v1/categories?limit=100 304 - 174.068 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68301a73f515544a885b9ee5 204 - 0.340 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68301ad7f515544a885b9eed 204 - 0.288 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68301b09f515544a885b9ef7 204 - 0.167 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68301b4bf515544a885b9f03 204 - 0.198 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68301b91f515544a885b9f11 204 - 0.192 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68301bcef515544a885b9f21 204 - 0.175 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68302209f515544a885ba03f 204 - 0.174 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68302245f515544a885ba053 204 - 0.288 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/6830227cf515544a885ba069 204 - 0.179 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68302313f515544a885ba081 204 - 0.197 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68302320f515544a885ba09b 204 - 0.183 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68303a430c88ef3c082df5fe 204 - 0.811 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68303acb0c88ef3c082df61a 204 - 0.145 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68303c85f0b6d74914d2e022 204 - 0.288 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68303ecdf0b6d74914d2e07f 204 - 0.160 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68304112f0b6d74914d2e256 204 - 0.165 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68304128f0b6d74914d2e27c 204 - 0.161 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68304150f0b6d74914d2e2ce 204 - 0.150 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/6830413bf0b6d74914d2e2a4 204 - 0.149 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/683042eef0b6d74914d2e436 204 - 0.242 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68304314f0b6d74914d2e464 204 - 0.314 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68304323f0b6d74914d2e494 204 - 0.162 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"OPTIONS /v1/subcategories/category/68304331f0b6d74914d2e4c6 204 - 0.169 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/categories?limit=100 304 - 175.023 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68301a73f515544a885b9ee5 200 - 166.918 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68301ad7f515544a885b9eed 200 - 165.867 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68301b09f515544a885b9ef7 200 - 168.341 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68301b4bf515544a885b9f03 200 - 170.254 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68301b91f515544a885b9f11 200 - 175.645 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68301bcef515544a885b9f21 200 - 149.115 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68302245f515544a885ba053 200 - 154.906 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68302209f515544a885ba03f 200 - 165.480 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/6830227cf515544a885ba069 200 - 165.913 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68302313f515544a885ba081 200 - 162.416 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68302320f515544a885ba09b 200 - 164.272 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68303a430c88ef3c082df5fe 200 - 154.681 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68303c85f0b6d74914d2e022 200 - 150.977 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68303acb0c88ef3c082df61a 200 - 163.798 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68303ecdf0b6d74914d2e07f 200 - 153.514 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68304112f0b6d74914d2e256 200 - 156.783 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68304128f0b6d74914d2e27c 200 - 163.316 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/68304150f0b6d74914d2e2ce 200 - 434.867 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:41"}
+{"message":"GET /v1/subcategories/category/6830413bf0b6d74914d2e2a4 200 - 449.124 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/683042eef0b6d74914d2e436 200 - 453.230 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68304331f0b6d74914d2e4c6 200 - 435.470 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68304314f0b6d74914d2e464 200 - 456.456 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68304323f0b6d74914d2e494 200 - 454.719 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68301a73f515544a885b9ee5 304 - 154.416 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68301ad7f515544a885b9eed 304 - 157.065 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68301b09f515544a885b9ef7 304 - 154.935 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68301b4bf515544a885b9f03 304 - 151.303 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68301bcef515544a885b9f21 304 - 148.936 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68301b91f515544a885b9f11 304 - 157.275 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68302245f515544a885ba053 304 - 150.333 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68302209f515544a885ba03f 304 - 154.015 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/6830227cf515544a885ba069 304 - 154.598 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68302320f515544a885ba09b 304 - 148.364 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68302313f515544a885ba081 304 - 166.184 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68303a430c88ef3c082df5fe 304 - 163.045 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68303c85f0b6d74914d2e022 304 - 610.199 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68303acb0c88ef3c082df61a 304 - 602.392 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68303ecdf0b6d74914d2e07f 304 - 608.602 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68304112f0b6d74914d2e256 304 - 622.550 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68304128f0b6d74914d2e27c 304 - 611.308 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/68304150f0b6d74914d2e2ce 304 - 615.409 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:42"}
+{"message":"GET /v1/subcategories/category/6830413bf0b6d74914d2e2a4 304 - 155.368 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:43"}
+{"message":"GET /v1/subcategories/category/683042eef0b6d74914d2e436 304 - 155.303 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:43"}
+{"message":"GET /v1/subcategories/category/68304331f0b6d74914d2e4c6 304 - 146.541 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:43"}
+{"message":"GET /v1/subcategories/category/68304323f0b6d74914d2e494 304 - 140.384 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:43"}
+{"message":"GET /v1/subcategories/category/68304314f0b6d74914d2e464 304 - 155.080 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 14:50:43"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:07:03"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:07:03"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:07:06"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:12:44"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:12:44"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:12:46"}
+{"message":"POST /v1/auth/login 200 - 336.088 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:19:58"}
+{"message":"POST /v1/leads 201 - 279.433 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:32:01"}
+{"statusCode":404,"message":"Lead not found","status":"fail","isOperational":true,"level":"error","service":"vsc-insurance-app","timestamp":"2025-05-29 15:37:52","stack":"Error: Lead not found\n    at file:///D:/Projects/VSC_Insurance_App/Vsc_backend/src/controllers/lead.controller.js:47:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"}
+{"message":"GET /v1/leads/683409f39d736c06c8a030d0 404 - 164.994 ms - message: Lead not found","level":"error","service":"vsc-insurance-app","timestamp":"2025-05-29 15:37:52"}
+{"message":"GET /v1/leads/ 200 - 171.023 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:38:17"}
+{"message":"GET /v1/leads/user/683409f39d736c06c8a030d0 200 - 168.046 ms","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:40:18"}
+{"message":"Connected to MongoDB","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:41:59"}
+{"message":"Listening to port 3000","level":"info","service":"vsc-insurance-app","timestamp":"2025-05-29 15:41:59"}
+{"message":"Unable to connect to email server. Make sure you have configured the SMTP options in .env","level":"warn","service":"vsc-insurance-app","timestamp":"2025-05-29 15:42:01"}
