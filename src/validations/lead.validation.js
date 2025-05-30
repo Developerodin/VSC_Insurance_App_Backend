@@ -12,8 +12,6 @@ const createLead = {
       status: Joi.string().valid('interested', 'proposed', 'sold', 'rejected'),
     })),
     fieldsData: Joi.object().pattern(Joi.string(), Joi.any()),
-    lastContact: Joi.date(),
-    nextFollowUp: Joi.date(),
   }),
 };
 
@@ -47,9 +45,7 @@ const updateLead = {
       source: Joi.string().valid('direct', 'referral', 'website', 'social', 'other'),
       category: Joi.string().custom(objectId),
       subcategory: Joi.string().custom(objectId),
-      fieldsData: Joi.object().pattern(Joi.string(), Joi.any()),
-      lastContact: Joi.date(),
-      nextFollowUp: Joi.date(),
+      fieldsData: Joi.object().pattern(Joi.string(), Joi.any())
     })
     .min(1),
 };
