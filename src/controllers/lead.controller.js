@@ -37,11 +37,6 @@ export const getLeads = catchAsync(async (req, res) => {
     populate: 'agent,category,subcategory,products.product'
   };
 
-  // Filter by agent if not admin
-  if (req.user.role !== 'admin') {
-    filter.agent = req.user.id;
-  }
-
   if (req.query.status) filter.status = req.query.status;
   if (req.query.source) filter.source = req.query.source;
   if (req.query.category) filter.category = req.query.category;
@@ -60,9 +55,7 @@ export const getLead = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
   res.send(lead);
 });
 
@@ -72,9 +65,7 @@ export const updateLead = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   const oldStatus = lead.status;
   Object.assign(lead, req.body);
@@ -112,9 +103,7 @@ export const deleteLead = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
   await lead.deleteOne();
   res.status(httpStatus.NO_CONTENT).send();
 });
@@ -125,9 +114,7 @@ export const addFollowUp = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   lead.followUps.push({
     ...req.body,
@@ -164,9 +151,7 @@ export const addNote = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   lead.notes.push({
     content: req.body.content,
@@ -186,7 +171,7 @@ export const addNote = catchAsync(async (req, res) => {
 
 export const getLeadStats = catchAsync(async (req, res) => {
   const filter = {};
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     filter.agent = req.user.id;
   }
 
@@ -260,9 +245,7 @@ export const updateLeadFields = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   // Update fieldsData with new values
   if (req.body.fieldsData) {
@@ -295,9 +278,7 @@ export const updateLeadProducts = catchAsync(async (req, res) => {
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-  if (lead.agent._id.toString() !== req.user.id && req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
-  }
+
 
   if (req.body.products) {
     lead.products = req.body.products;
@@ -313,4 +294,184 @@ export const updateLeadProducts = catchAsync(async (req, res) => {
     .populate('products.product');
     
   res.send(lead);
+});
+
+/**
+ * Get lead timeline information
+ * @param {string} leadId - The ID of the lead
+ * @returns {Object} Timeline data including current status, phases, and remaining steps
+ */
+export const getLeadTimeline = catchAsync(async (req, res) => {
+  const lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+  
+  // Define all possible statuses in order
+  const allStatuses = [
+    'new', 
+    'contacted', 
+    'interested', 
+    'followUp', 
+    'qualified', 
+    'proposal', 
+    'negotiation', 
+    'closed', 
+    'lost'
+  ];
+  
+  // Get current status index
+  const currentStatusIndex = allStatuses.indexOf(lead.status);
+  
+  // Calculate estimated completion percentage
+  let completionPercentage = 0;
+  if (lead.status === 'closed') {
+    completionPercentage = 100;
+  } else if (lead.status === 'lost') {
+    completionPercentage = 100; // Also consider lost as "complete" but with different outcome
+  } else if (currentStatusIndex >= 0) {
+    // Calculate percentage based on current status position
+    // Exclude 'lost' from calculation (hence the -1)
+    completionPercentage = Math.round((currentStatusIndex / (allStatuses.length - 2)) * 100);
+  }
+  
+  // Create a more detailed phases array with time estimates and descriptions
+  const phasesDetails = [
+    { 
+      name: 'new', 
+      description: 'Lead has been created but no contact made yet',
+      estimatedDuration: '1-2 days',
+    },
+    { 
+      name: 'contacted', 
+      description: 'Initial contact has been made with the lead',
+      estimatedDuration: '2-3 days',
+    },
+    { 
+      name: 'interested', 
+      description: 'Lead has expressed interest in our products/services',
+      estimatedDuration: '3-5 days',
+    },
+    { 
+      name: 'followUp', 
+      description: 'Follow-up communications are in progress',
+      estimatedDuration: '5-7 days',
+    },
+    { 
+      name: 'qualified', 
+      description: 'Lead has been qualified as a potential customer',
+      estimatedDuration: '3-5 days',
+    },
+    { 
+      name: 'proposal', 
+      description: 'Proposal has been presented to the lead',
+      estimatedDuration: '7-14 days',
+    },
+    { 
+      name: 'negotiation', 
+      description: 'Terms are being negotiated with the lead',
+      estimatedDuration: '7-14 days',
+    },
+    { 
+      name: 'closed', 
+      description: 'Deal successfully closed',
+      estimatedDuration: 'Complete',
+    },
+    { 
+      name: 'lost', 
+      description: 'Deal was lost or lead is no longer interested',
+      estimatedDuration: 'Complete',
+    }
+  ];
+  
+  // Build timeline data
+  const timeline = {
+    leadId: lead._id,
+    currentStatus: lead.status,
+    createdAt: lead.createdAt,
+    updatedAt: lead.updatedAt,
+    agent: lead.agent,
+    category: lead.category,
+    subcategory: lead.subcategory,
+    source: lead.source,
+    lastContact: lead.lastContact,
+    nextFollowUp: lead.nextFollowUp,
+    completionPercentage,
+    
+    // Create phases with completion status and details
+    phases: allStatuses.map((status, index) => {
+      const phaseDetails = phasesDetails.find(phase => phase.name === status);
+      return {
+        name: status,
+        description: phaseDetails.description,
+        estimatedDuration: phaseDetails.estimatedDuration,
+        completed: index <= currentStatusIndex && lead.status !== 'lost',
+        active: status === lead.status,
+        skipped: lead.status === 'lost' && index > currentStatusIndex,
+        // Indicate when this phase was likely active (estimation)
+        estimatedActiveDate: index <= currentStatusIndex ? 
+          new Date(new Date(lead.createdAt).getTime() + (index * 3 * 24 * 60 * 60 * 1000)) : null // Roughly 3 days per phase
+      };
+    }),
+    
+    // Remaining steps (statuses after current one, if not closed or lost)
+    remainingSteps: (lead.status !== 'closed' && lead.status !== 'lost') 
+      ? allStatuses.slice(currentStatusIndex + 1).map(status => {
+          const phaseDetails = phasesDetails.find(phase => phase.name === status);
+          return {
+            name: status,
+            description: phaseDetails.description,
+            estimatedDuration: phaseDetails.estimatedDuration
+          };
+        }) 
+      : [],
+      
+    // Timeline is complete when status is closed or lost
+    isComplete: lead.status === 'closed' || lead.status === 'lost',
+    
+    // Products information with status
+    products: lead.products,
+    
+    // Key events in timeline
+    keyEvents: [
+      {
+        name: 'Lead Created',
+        date: lead.createdAt,
+        description: `Lead was created with source: ${lead.source}`
+      },
+      {
+        name: 'Last Updated',
+        date: lead.updatedAt,
+        description: 'Lead information was last updated'
+      }
+    ]
+  };
+  
+  // Add last contact event if available
+  if (lead.lastContact) {
+    timeline.keyEvents.push({
+      name: 'Last Contact',
+      date: lead.lastContact,
+      description: 'Last communication with the lead'
+    });
+  }
+  
+  // Add next follow-up event if available
+  if (lead.nextFollowUp) {
+    timeline.keyEvents.push({
+      name: 'Next Follow-up',
+      date: lead.nextFollowUp,
+      description: 'Scheduled follow-up with the lead'
+    });
+  }
+  
+  // Sort key events by date
+  timeline.keyEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  res.send(timeline);
 }); 

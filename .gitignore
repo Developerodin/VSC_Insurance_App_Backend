@@ -15,3 +15,6 @@ coverage
 combined.log
 error.log
 access.log
+
+combined.log
+error.log
