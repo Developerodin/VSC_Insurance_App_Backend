@@ -4,7 +4,7 @@ const createCategory = {
   body: Joi.object().keys({
     name: Joi.string().required().trim(),
     description: Joi.string().required(),
-    type: Joi.string().valid('insurance', 'banking').required(),
+    type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding').required(),
     status: Joi.string().valid('active', 'inactive').default('active'),
     metadata: Joi.object().pattern(Joi.string(), Joi.any()),
   }),
@@ -13,7 +13,7 @@ const createCategory = {
 const getCategories = {
   query: Joi.object().keys({
     name: Joi.string(),
-    type: Joi.string().valid('insurance', 'banking'),
+    type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
     status: Joi.string().valid('active', 'inactive'),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
@@ -35,7 +35,7 @@ const updateCategory = {
     .keys({
       name: Joi.string().trim(),
       description: Joi.string(),
-      type: Joi.string().valid('insurance', 'banking'),
+      type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
       status: Joi.string().valid('active', 'inactive'),
       metadata: Joi.object().pattern(Joi.string(), Joi.any()),
     })

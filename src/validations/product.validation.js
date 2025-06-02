@@ -4,7 +4,7 @@ import { objectId } from './custom.validation.js';
 const createProduct = {
   body: Joi.object().keys({
     name: Joi.string().required().trim(),
-    type: Joi.string().valid('insurance', 'banking').required(),
+    type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding').required(),
     categories: Joi.array().items(Joi.string().custom(objectId)).required(),
     description: Joi.string().required(),
     features: Joi.array().items(Joi.string()),
@@ -68,7 +68,7 @@ const createProduct = {
 const getProducts = {
   query: Joi.object().keys({
     name: Joi.string(),
-    type: Joi.string().valid('insurance', 'banking'),
+    type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
     categories: Joi.array().items(Joi.string().custom(objectId)),
     status: Joi.string().valid('active', 'inactive', 'draft'),
     sortBy: Joi.string(),
@@ -90,7 +90,7 @@ const updateProduct = {
   body: Joi.object()
     .keys({
       name: Joi.string().trim(),
-      type: Joi.string().valid('insurance', 'banking'),
+      type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
       categories: Joi.array().items(Joi.string().custom(objectId)),
       description: Joi.string(),
       features: Joi.array().items(Joi.string()),
@@ -159,7 +159,7 @@ const getProductStats = {
 const searchProducts = {
   query: Joi.object().keys({
     query: Joi.string().required(),
-    type: Joi.string().valid('insurance', 'banking'),
+    type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
     categories: Joi.array().items(Joi.string().custom(objectId)),
     status: Joi.string().valid('active', 'inactive', 'draft'),
     limit: Joi.number().integer(),

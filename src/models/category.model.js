@@ -15,7 +15,7 @@ const categorySchema = mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['insurance', 'banking'],
+      enum: ['insurance', 'banking', 'capital market', 'it sector', 'project funding'],
       required: true,
     },
     status: {
