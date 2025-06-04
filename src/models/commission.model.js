@@ -18,11 +18,6 @@ const commissionSchema = mongoose.Schema(
       ref: 'Lead',
       required: true,
     },
-    sale: {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'Sale',
-      required: true,
-    },
     amount: {
       type: Number,
       required: true,
@@ -49,10 +44,6 @@ const commissionSchema = mongoose.Schema(
       enum: ['pending', 'approved', 'paid', 'cancelled'],
       default: 'pending',
     },
-    payout: {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'Payout',
-    },
     paymentDetails: {
       bankAccount: {
         type: mongoose.SchemaTypes.ObjectId,
@@ -65,22 +56,6 @@ const commissionSchema = mongoose.Schema(
         enum: ['bank_transfer', 'upi', 'cheque', 'other'],
       },
     },
-    documents: [{
-      name: String,
-      url: String,
-      type: String,
-    }],
-    notes: [{
-      content: String,
-      createdBy: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
-    }],
     metadata: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,

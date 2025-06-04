@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError.js';
 
 
 const validate = (schema) => (req, res, next) => {
+  
   const validSchema = pick(schema, ['params', 'query', 'body']);
   const object = pick(req, Object.keys(validSchema));
   const { value, error } = Joi.compile(validSchema)
