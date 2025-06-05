@@ -4,6 +4,7 @@ import ApiError from '../utils/ApiError.js';
 import {catchAsync} from '../utils/catchAsync.js';
 import * as userService from '../services/user.service.js';
 import { User, Notification, BankAccount } from '../models/index.js';
+import * as kycService from '../services/kyc.service.js';
 
 export const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -73,13 +74,21 @@ export const updateKycDetails = catchAsync(async (req, res) => {
   }
 
   const { aadhaarNumber, panNumber } = req.body;
+  let updated = false;
+
   if (aadhaarNumber) {
     user.kycDetails.aadhaarNumber = aadhaarNumber;
     user.kycDetails.aadhaarVerified = false;
+    updated = true;
   }
   if (panNumber) {
     user.kycDetails.panNumber = panNumber;
     user.kycDetails.panVerified = false;
+    updated = true;
+  }
+
+  if (!updated) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'No KYC field provided to update');
   }
 
   await user.save();
@@ -407,5 +416,61 @@ export const changePassword = catchAsync(async (req, res) => {
     message: 'Password changed successfully',
     userId: user._id 
   });
+});
+
+// Initiate Aadhaar KYC (send OTP)
+export const initiateAadhaarKyc = catchAsync(async (req, res) => {
+  const user = await User.findById(req.params.userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  const { aadhaarNumber } = req.body;
+  if (!aadhaarNumber) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Aadhaar number is required');
+  }
+  const result = await kycService.initiateAadhaarOtp(aadhaarNumber);
+  // Optionally store ref_id in user for later verification
+  user.kycDetails.aadhaarNumber = aadhaarNumber;
+  user.kycDetails.aadhaarOtpRefId = result.ref_id;
+  await user.save();
+  res.send({ message: result.message, ref_id: result.ref_id });
+});
+
+// Verify Aadhaar KYC (submit OTP, get KYC, store details)
+export const verifyAadhaarKyc = catchAsync(async (req, res) => {
+  const user = await User.findById(req.params.userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  const { ref_id, otp } = req.body;
+  if (!ref_id || !otp) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'ref_id and otp are required');
+  }
+  const result = await kycService.verifyAadhaarOtp(ref_id, otp);
+  // Store all KYC details from response
+  user.kycDetails.aadhaarVerified = result.status === 'VALID';
+  user.kycDetails.aadhaarVerificationDate = new Date();
+  user.kycDetails.aadhaarKycData = result; // Store full response for audit
+  await user.save();
+  res.send({ message: result.message, kyc: result });
+});
+
+// Verify PAN KYC (verify PAN, store details)
+export const verifyPanKyc = catchAsync(async (req, res) => {
+  const user = await User.findById(req.params.userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  const { pan, name } = req.body;
+  if (!pan || !name) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'PAN and name are required');
+  }
+  const result = await kycService.verifyPan(pan, name);
+  user.kycDetails.panNumber = pan;
+  user.kycDetails.panVerified = result.valid === true;
+  user.kycDetails.panVerificationDate = new Date();
+  user.kycDetails.panKycData = result; // Store full response for audit
+  await user.save();
+  res.send({ message: result.message, kyc: result });
 });
 

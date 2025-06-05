@@ -70,6 +70,10 @@ router
 
 router.post('/login', validate(authValidation.login), authController.login);
 
+router.post('/:userId/kyc/aadhaar/initiate', userController.initiateAadhaarKyc);
+router.post('/:userId/kyc/aadhaar/verify', userController.verifyAadhaarKyc);
+router.post('/:userId/kyc/pan/verify', userController.verifyPanKyc);
+
 export default router;
 
 /**

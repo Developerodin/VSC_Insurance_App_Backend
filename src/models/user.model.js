@@ -11,6 +11,7 @@ const userSchema = mongoose.Schema(
     name: {
       type: String,
       trim: true,
+      default:'Test User'
     },
     email: {
       type: String,
@@ -54,24 +55,6 @@ const userSchema = mongoose.Schema(
       type: String,
       enum: ['pending', 'verified', 'rejected'],
       default: 'pending',
-    },
-    aadhaarNumber: {
-      type: String,
-      trim: true,
-      validate(value) {
-        if (value && !validator.isLength(value, { min: 12, max: 12 })) {
-          throw new Error('Invalid Aadhaar number');
-        }
-      },
-    },
-    panNumber: {
-      type: String,
-      trim: true,
-      validate(value) {
-        if (value && !validator.matches(value, /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)) {
-          throw new Error('Invalid PAN number');
-        }
-      },
     },
     bankAccounts: [{
       type: mongoose.SchemaTypes.ObjectId,
@@ -184,6 +167,15 @@ const userSchema = mongoose.Schema(
           default: Date.now,
         },
       }],
+      aadhaarOtpRefId: {
+        type: String,
+      },
+      aadhaarKycData: {
+        type: mongoose.Schema.Types.Mixed,
+      },
+      panKycData: {
+        type: mongoose.Schema.Types.Mixed,
+      },
     },
     otp: {
       code: String,

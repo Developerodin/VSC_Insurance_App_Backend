@@ -15,6 +15,8 @@ router.post('/forgot-password', validate(authValidation.forgotPassword), authCon
 router.post('/reset-password', validate(authValidation.resetPassword), authController.resetPassword);
 router.post('/send-verification-email', auth(), authController.sendVerificationEmail);
 router.post('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
+router.post('/login-or-send-otp', authController.loginOrSendOtp);
+router.post('/register-with-otp', authController.registerWithOtp);
 
 export default router;
 

@@ -105,6 +105,14 @@ const getUserPermissions = async (userId) => {
   return permissions.map(permission => permission.name);
 };
 
+/**
+ * Generate a 6-digit OTP
+ * @returns {string}
+ */
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 export {
   createUser,
   queryUsers,
@@ -113,5 +121,6 @@ export {
   updateUserById,
   deleteUserById,
   getUserPermissions,
+  generateOTP,
 };
 
