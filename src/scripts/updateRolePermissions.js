@@ -34,6 +34,7 @@ const updateRolePermissions = async () => {
         'getBankAccounts',
         'getTransactions',
         'getCommissions',
+        'manageCommissions',
         'getNotifications',
         'getSettings',
         'manageLeads'

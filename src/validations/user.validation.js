@@ -77,35 +77,35 @@ export const updateUser = {
       kycDetails: Joi.object().keys({
         aadhaarNumber: Joi.string().pattern(/^[0-9]{12}$/),
         aadhaarVerified: Joi.boolean(),
-        aadhaarVerificationDate: Joi.date(),
+        aadhaarVerificationDate: Joi.date().iso().allow(null),  // Changed
         panNumber: Joi.string().pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/),
         panVerified: Joi.boolean(),
-        panVerificationDate: Joi.date(),
+        panVerificationDate: Joi.date().iso().allow(null),  // Changed
         documents: Joi.array().items(
           Joi.object().keys({
             type: Joi.string().valid('aadhaar', 'pan', 'addressProof', 'photo', 'other'),
             url: Joi.string().uri(),
             verified: Joi.boolean(),
             verifiedBy: Joi.string().custom(objectId),
-            verifiedAt: Joi.date(),
+            verifiedAt: Joi.date().iso().allow(null),  // Changed
             rejectionReason: Joi.string(),
-            uploadedAt: Joi.date(),
+            uploadedAt: Joi.date().iso(),  // Changed
           })
         ),
       }),
       otp: Joi.object().keys({
         code: Joi.string(),
-        expiresAt: Joi.date(),
+        expiresAt: Joi.date().iso().allow(null),  // Changed
         attempts: Joi.number().min(0),
       }),
       emailVerification: Joi.object().keys({
         token: Joi.string(),
-        expiresAt: Joi.date(),
+        expiresAt: Joi.date().iso().allow(null),  // Changed
         verified: Joi.boolean(),
       }),
       mobileVerification: Joi.object().keys({
         token: Joi.string(),
-        expiresAt: Joi.date(),
+        expiresAt: Joi.date().iso().allow(null),  // Changed
         verified: Joi.boolean(),
       }),
     })

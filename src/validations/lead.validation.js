@@ -23,8 +23,8 @@ const getLeads = {
     category: Joi.string().custom(objectId),
     subcategory: Joi.string().custom(objectId),
     sortBy: Joi.string(),
-    limit: Joi.number().integer(),
-    page: Joi.number().integer(),
+    limit: Joi.number().integer().min(1).max(100),
+    page: Joi.number().integer().min(1),
   }),
 };
 

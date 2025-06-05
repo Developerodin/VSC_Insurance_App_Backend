@@ -4,9 +4,11 @@ import ApiError from '../utils/ApiError.js';
 import {catchAsync} from '../utils/catchAsync.js';
 
 export const createCommission = catchAsync(async (req, res) => {
+  console.log('Request body:', req.body);
+  // Create commission with agent ID from authenticated user
   const commission = await Commission.create({
     ...req.body,
-    agent: req.user.id,
+    agent: req.user.id, // Set agent ID from authenticated user
   });
 
   // Create notification for the agent
@@ -27,7 +29,10 @@ export const createCommission = catchAsync(async (req, res) => {
 
 export const getCommissions = catchAsync(async (req, res) => {
   const filter = {};
-  const options = {};
+  const options = {
+    populate: 'product paymentDetails.bankAccount',
+    select: 'product.name product.commission paymentDetails.bankAccount.accountHolderName paymentDetails.bankAccount.accountNumber paymentDetails.bankAccount.bankName',
+  };
 
   // Filter by agent if not admin
   if (req.user.role !== 'admin') {
@@ -47,7 +52,10 @@ export const getCommissions = catchAsync(async (req, res) => {
 });
 
 export const getCommission = catchAsync(async (req, res) => {
-  const commission = await Commission.findById(req.params.commissionId);
+  const commission = await Commission.findById(req.params.commissionId)
+    .populate('product', 'name commission')
+    .populate('paymentDetails.bankAccount', 'accountHolderName accountNumber bankName');
+    
   if (!commission) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Commission not found');
   }
@@ -162,7 +170,7 @@ export const getCommissionStats = catchAsync(async (req, res) => {
 });
 
 export const getAgentCommissions = catchAsync(async (req, res) => {
-  const agentId = req.params.agentId;
+  const { agentId } = req.params;
   const agent = await User.findById(agentId);
   if (!agent) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Agent not found');
@@ -177,7 +185,15 @@ export const getAgentCommissions = catchAsync(async (req, res) => {
     };
   }
 
-  const commissions = await Commission.paginate(filter);
+  const options = {
+    sortBy: req.query.sortBy || 'createdAt:desc',
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1,
+    populate: 'product paymentDetails.bankAccount',
+    select: 'product.name product.commission paymentDetails.bankAccount.accountHolderName paymentDetails.bankAccount.accountNumber paymentDetails.bankAccount.bankName',
+  };
+
+  const commissions = await Commission.paginate(filter, options);
   res.send(commissions);
 });
 

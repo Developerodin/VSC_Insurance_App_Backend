@@ -34,12 +34,16 @@ export const createLead = catchAsync(async (req, res) => {
 export const getLeads = catchAsync(async (req, res) => {
   const filter = {};
   const options = {
-    populate: 'agent,category,subcategory,products.product'
+    populate: 'agent,category,subcategory,products.product',
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1
   };
 
   if (req.query.status) filter.status = req.query.status;
   if (req.query.source) filter.source = req.query.source;
   if (req.query.category) filter.category = req.query.category;
+  if (req.query.agent) filter.agent = req.query.agent;
+  if (req.query.subcategory) filter.subcategory = req.query.subcategory;
 
   const leads = await Lead.paginate(filter, options);
   res.send(leads);
