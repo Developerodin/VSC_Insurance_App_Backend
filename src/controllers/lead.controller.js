@@ -478,4 +478,65 @@ export const getLeadTimeline = catchAsync(async (req, res) => {
   timeline.keyEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
   
   res.send(timeline);
+});
+
+export const addDocument = catchAsync(async (req, res) => {
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+
+  const { url, key, name } = req.body;
+  
+  lead.documents.push({
+    url,
+    key,
+    name,
+    uploadedAt: new Date()
+  });
+  
+  await lead.save();
+  
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
+  res.send(lead);
+});
+
+export const removeDocument = catchAsync(async (req, res) => {
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email');
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+
+  const { documentKey } = req.params;
+  
+  // Find and remove the document
+  lead.documents = lead.documents.filter(doc => doc.key !== documentKey);
+  
+  await lead.save();
+  
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product');
+    
+  res.send(lead);
+});
+
+export const getDocuments = catchAsync(async (req, res) => {
+  const lead = await Lead.findById(req.params.leadId);
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+
+  res.send(lead.documents);
 }); 

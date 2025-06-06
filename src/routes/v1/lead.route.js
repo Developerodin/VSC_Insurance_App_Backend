@@ -42,4 +42,14 @@ router
   .route('/:leadId/timeline')
   .get(auth('getLeads'), validate(leadValidation.getLead), leadController.getLeadTimeline);
 
+// Document management routes
+router
+  .route('/:leadId/documents')
+  .get(auth('getLeads'), validate(leadValidation.getLead), leadController.getDocuments)
+  .post(auth('manageLeads'), validate(leadValidation.getLead), leadController.addDocument);
+
+router
+  .route('/:leadId/documents/:documentKey')
+  .delete(auth('manageLeads'), validate(leadValidation.getLead), leadController.removeDocument);
+
 export default router; 

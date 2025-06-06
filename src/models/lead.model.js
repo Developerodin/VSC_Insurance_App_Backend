@@ -49,6 +49,25 @@ const leadSchema = mongoose.Schema(
     nextFollowUp: {
       type: Date,
     },
+    // Optional documents array - some leads may have documents while others may not
+    documents: [{
+      url: {
+        type: String,
+        required: true,
+      },
+      key: {
+        type: String,
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now,
+      }
+    }],
   },
   {
     timestamps: true,

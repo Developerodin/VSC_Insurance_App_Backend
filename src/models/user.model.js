@@ -86,6 +86,9 @@ const userSchema = mongoose.Schema(
     profilePicture: {
       type: String,
     },
+    profilePictureKey: {
+      type: String,
+    },
     address: {
       street: String,
       city: String,
@@ -152,6 +155,7 @@ const userSchema = mongoose.Schema(
           required: true,
         },
         url: String,
+        key: String,
         verified: {
           type: Boolean,
           default: false,
