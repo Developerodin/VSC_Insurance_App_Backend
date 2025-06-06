@@ -5,15 +5,74 @@ import { roles } from '../config/roles.js';
 export const createUser = {
   body: Joi.object().keys({
     email: Joi.string().required().email(),
-    password: Joi.string().required().min(6),
-    name: Joi.string(),
-    role: Joi.string().valid(...roles),
-    mobileNumber: Joi.string(),
-    status: Joi.string().valid('pending', 'active', 'inactive', 'suspended'),
-    onboardingStatus: Joi.string().valid('pending', 'in_progress', 'completed', 'rejected'),
+    password: Joi.string().required().min(8),
+    name: Joi.string().trim().default('Test User'),
+    role: Joi.string().valid(...roles).default('user'),
+    mobileNumber: Joi.string().pattern(/^[0-9]{10}$/),
+    status: Joi.string().valid('pending', 'active', 'inactive', 'suspended').default('pending'),
+    kycStatus: Joi.string().valid('pending', 'verified', 'rejected').default('pending'),
+    bankAccounts: Joi.array().items(Joi.string().custom(objectId)),
+    totalCommission: Joi.number().default(0),
+    totalLeads: Joi.number().default(0),
+    totalSales: Joi.number().default(0),
+    lastLogin: Joi.date(),
+    isEmailVerified: Joi.boolean().default(false),
+    isMobileVerified: Joi.boolean().default(false),
+    profilePicture: Joi.string(),
+    profilePictureKey: Joi.string(),
+    address: Joi.object().keys({
+      street: Joi.string(),
+      city: Joi.string(),
+      state: Joi.string(),
+      pincode: Joi.string(),
+      country: Joi.string().default('India'),
+    }),
+    documents: Joi.array().items(
+      Joi.object().keys({
+        type: Joi.string().valid('aadhaar', 'pan', 'addressProof', 'other'),
+        url: Joi.string(),
+        verified: Joi.boolean().default(false),
+        uploadedAt: Joi.date().default(() => new Date()),
+      })
+    ),
+    onboardingStatus: Joi.string().valid('pending', 'in_progress', 'completed', 'rejected').default('pending'),
     kycDetails: Joi.object().keys({
       aadhaarNumber: Joi.string().pattern(/^[0-9]{12}$/),
+      aadhaarVerified: Joi.boolean().default(false),
+      aadhaarVerificationDate: Joi.date(),
       panNumber: Joi.string().pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/),
+      panVerified: Joi.boolean().default(false),
+      panVerificationDate: Joi.date(),
+      documents: Joi.array().items(
+        Joi.object().keys({
+          type: Joi.string().valid('aadhaar', 'pan', 'addressProof', 'photo', 'other').required(),
+          url: Joi.string(),
+          key: Joi.string(),
+          verified: Joi.boolean().default(false),
+          verifiedBy: Joi.string().custom(objectId),
+          verifiedAt: Joi.date(),
+          rejectionReason: Joi.string(),
+          uploadedAt: Joi.date().default(() => new Date()),
+        })
+      ),
+      aadhaarOtpRefId: Joi.string(),
+      aadhaarKycData: Joi.object(),
+      panKycData: Joi.object(),
+    }),
+    otp: Joi.object().keys({
+      code: Joi.string(),
+      expiresAt: Joi.date(),
+      attempts: Joi.number().default(0),
+    }),
+    emailVerification: Joi.object().keys({
+      token: Joi.string(),
+      expiresAt: Joi.date(),
+      verified: Joi.boolean().default(false),
+    }),
+    mobileVerification: Joi.object().keys({
+      token: Joi.string(),
+      expiresAt: Joi.date(),
+      verified: Joi.boolean().default(false),
     }),
   }),
 };
@@ -45,19 +104,19 @@ export const updateUser = {
       email: Joi.string().email(),
       password: Joi.string().min(8),
       name: Joi.string().trim(),
-      mobileNumber: Joi.string(),
+      mobileNumber: Joi.string().pattern(/^[0-9]{10}$/),
       role: Joi.string().valid(...roles),
       status: Joi.string().valid('pending', 'active', 'inactive', 'suspended'),
       kycStatus: Joi.string().valid('pending', 'verified', 'rejected'),
-      aadhaarNumber: Joi.string().pattern(/^[0-9]{12}$/),
-      panNumber: Joi.string().pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/),
+      bankAccounts: Joi.array().items(Joi.string().custom(objectId)),
       totalCommission: Joi.number().min(0),
       totalLeads: Joi.number().min(0),
       totalSales: Joi.number().min(0),
       lastLogin: Joi.date(),
       isEmailVerified: Joi.boolean(),
       isMobileVerified: Joi.boolean(),
-      profilePicture: Joi.string().uri(),
+      profilePicture: Joi.string(),
+      profilePictureKey: Joi.string(),
       address: Joi.object().keys({
         street: Joi.string(),
         city: Joi.string(),
@@ -68,7 +127,7 @@ export const updateUser = {
       documents: Joi.array().items(
         Joi.object().keys({
           type: Joi.string().valid('aadhaar', 'pan', 'addressProof', 'other'),
-          url: Joi.string().uri(),
+          url: Joi.string(),
           verified: Joi.boolean(),
           uploadedAt: Joi.date(),
         })
@@ -77,35 +136,39 @@ export const updateUser = {
       kycDetails: Joi.object().keys({
         aadhaarNumber: Joi.string().pattern(/^[0-9]{12}$/),
         aadhaarVerified: Joi.boolean(),
-        aadhaarVerificationDate: Joi.date().iso().allow(null),  // Changed
+        aadhaarVerificationDate: Joi.date(),
         panNumber: Joi.string().pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/),
         panVerified: Joi.boolean(),
-        panVerificationDate: Joi.date().iso().allow(null),  // Changed
+        panVerificationDate: Joi.date(),
         documents: Joi.array().items(
           Joi.object().keys({
-            type: Joi.string().valid('aadhaar', 'pan', 'addressProof', 'photo', 'other'),
-            url: Joi.string().uri(),
+            type: Joi.string().valid('aadhaar', 'pan', 'addressProof', 'photo', 'other').required(),
+            url: Joi.string(),
+            key: Joi.string(),
             verified: Joi.boolean(),
             verifiedBy: Joi.string().custom(objectId),
-            verifiedAt: Joi.date().iso().allow(null),  // Changed
+            verifiedAt: Joi.date(),
             rejectionReason: Joi.string(),
-            uploadedAt: Joi.date().iso(),  // Changed
+            uploadedAt: Joi.date(),
           })
         ),
+        aadhaarOtpRefId: Joi.string(),
+        aadhaarKycData: Joi.object(),
+        panKycData: Joi.object(),
       }),
       otp: Joi.object().keys({
         code: Joi.string(),
-        expiresAt: Joi.date().iso().allow(null),  // Changed
+        expiresAt: Joi.date(),
         attempts: Joi.number().min(0),
       }),
       emailVerification: Joi.object().keys({
         token: Joi.string(),
-        expiresAt: Joi.date().iso().allow(null),  // Changed
+        expiresAt: Joi.date(),
         verified: Joi.boolean(),
       }),
       mobileVerification: Joi.object().keys({
         token: Joi.string(),
-        expiresAt: Joi.date().iso().allow(null),  // Changed
+        expiresAt: Joi.date(),
         verified: Joi.boolean(),
       }),
     })

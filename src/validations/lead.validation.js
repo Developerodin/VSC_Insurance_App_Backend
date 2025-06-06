@@ -3,15 +3,24 @@ import { objectId } from './custom.validation.js';
 
 const createLead = {
   body: Joi.object().keys({
+    agent: Joi.string().custom(objectId).required(),
     status: Joi.string().valid('new', 'contacted', 'interested', 'followUp', 'qualified', 'proposal', 'negotiation', 'closed', 'lost').default('new'),
     source: Joi.string().valid('direct', 'referral', 'website', 'social', 'other').required(),
     category: Joi.string().custom(objectId).required(),
     subcategory: Joi.string().custom(objectId),
     products: Joi.array().items(Joi.object().keys({
-      product: Joi.string().custom(objectId).required(),
+      product: Joi.string().custom(objectId),
       status: Joi.string().valid('interested', 'proposed', 'sold', 'rejected'),
     })),
-    fieldsData: Joi.object().pattern(Joi.string(), Joi.any()),
+    fieldsData: Joi.object().pattern(Joi.string(), Joi.any()).default({}),
+    lastContact: Joi.date(),
+    nextFollowUp: Joi.date(),
+    documents: Joi.array().items(Joi.object().keys({
+      url: Joi.string().required(),
+      key: Joi.string().required(),
+      name: Joi.string().required(),
+      uploadedAt: Joi.date().default(() => new Date()),
+    })),
   }),
 };
 
@@ -45,7 +54,19 @@ const updateLead = {
       source: Joi.string().valid('direct', 'referral', 'website', 'social', 'other'),
       category: Joi.string().custom(objectId),
       subcategory: Joi.string().custom(objectId),
-      fieldsData: Joi.object().pattern(Joi.string(), Joi.any())
+      products: Joi.array().items(Joi.object().keys({
+        product: Joi.string().custom(objectId),
+        status: Joi.string().valid('interested', 'proposed', 'sold', 'rejected'),
+      })),
+      fieldsData: Joi.object().pattern(Joi.string(), Joi.any()),
+      lastContact: Joi.date(),
+      nextFollowUp: Joi.date(),
+      documents: Joi.array().items(Joi.object().keys({
+        url: Joi.string().required(),
+        key: Joi.string().required(),
+        name: Joi.string().required(),
+        uploadedAt: Joi.date(),
+      })),
     })
     .min(1),
 };
@@ -64,6 +85,7 @@ const getLeadStats = {
     status: Joi.string().valid('new', 'contacted', 'interested', 'followUp', 'qualified', 'proposal', 'negotiation', 'closed', 'lost'),
     source: Joi.string().valid('direct', 'referral', 'website', 'social', 'other'),
     category: Joi.string().custom(objectId),
+    subcategory: Joi.string().custom(objectId),
   }),
 };
 
@@ -84,9 +106,10 @@ const getLeadsByUserId = {
     status: Joi.string().valid('new', 'contacted', 'interested', 'followUp', 'qualified', 'proposal', 'negotiation', 'closed', 'lost'),
     source: Joi.string().valid('direct', 'referral', 'website', 'social', 'other'),
     category: Joi.string().custom(objectId),
+    subcategory: Joi.string().custom(objectId),
     sortBy: Joi.string(),
-    limit: Joi.number().integer(),
-    page: Joi.number().integer(),
+    limit: Joi.number().integer().min(1).max(100),
+    page: Joi.number().integer().min(1),
   }),
 };
 
