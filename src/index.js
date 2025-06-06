@@ -2,14 +2,35 @@ import mongoose from 'mongoose';
 import app from './app.js';
 import * as config from './config/config.js';
 import logger from './config/logger.js';
+import { testS3Connection } from './utils/s3Connection.js';
 
 let server;
-mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
-  logger.info('Connected to MongoDB');
-  server = app.listen(config.port, () => {
-    logger.info(`Listening to port ${config.port}`);
-  });
-});
+
+const startServer = async () => {
+  try {
+    // Test S3 connection
+   
+
+    // Connect to MongoDB
+    await mongoose.connect(config.mongoose.url, config.mongoose.options);
+    logger.info('Connected to MongoDB');
+
+    // Start server
+    server = app.listen(config.port, () => {
+      logger.info(`Listening to port ${config.port}`);
+    });
+    const s3Connected = await testS3Connection();
+    if (!s3Connected) {
+      logger.error('Failed to connect to AWS S3. Server startup aborted.');
+      process.exit(1);
+    }
+  } catch (error) {
+    logger.error('Error during server startup:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 const exitHandler = () => {
   if (server) {

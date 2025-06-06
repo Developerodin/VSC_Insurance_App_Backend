@@ -15,6 +15,7 @@ import roleRoute from './role.route.js';
 import permissionRoute from './permission.route.js';
 import rolePermissionRoute from './rolePermission.route.js';
 import leadsFieldsRoute from './leadsFields.route.js';
+import commonRoute from '../common.routes.js';
 import * as config from '../../config/config.js';
 
 const router = express.Router();
@@ -79,6 +80,10 @@ const defaultRoutes = [
   {
     path: '/role-permissions',
     route: rolePermissionRoute,
+  },
+  {
+    path: '/files',
+    route: commonRoute,
   },
 ];
 
