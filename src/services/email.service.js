@@ -68,11 +68,18 @@ const sendEmailOtp = async (to, otp) => {
   await sendEmail(to, subject, text);
 };
 
+const sendPasswordResetOtp = async (to, otp) => {
+  const subject = 'Your Password Reset OTP';
+  const text = `Your OTP for password reset is: ${otp}\nThis OTP is valid for 10 minutes.`;
+  await sendEmail(to, subject, text);
+};
+
 export {
   transport,
   sendEmail,
   sendResetPasswordEmail,
   sendVerificationEmail,
   sendEmailOtp,
+  sendPasswordResetOtp
 };
 
