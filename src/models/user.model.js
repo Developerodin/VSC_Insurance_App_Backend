@@ -180,6 +180,7 @@ const userSchema = mongoose.Schema(
       panKycData: {
         type: mongoose.Schema.Types.Mixed,
       },
+      bankVerifications:[]
     },
     otp: {
       code: String,

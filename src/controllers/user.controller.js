@@ -5,6 +5,7 @@ import {catchAsync} from '../utils/catchAsync.js';
 import * as userService from '../services/user.service.js';
 import { User, Notification, BankAccount } from '../models/index.js';
 import * as kycService from '../services/kyc.service.js';
+import { verifyPan, verifyBankAccount } from '../services/truthscreen.service.js';
 
 export const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -461,15 +462,51 @@ export const verifyPanKyc = catchAsync(async (req, res) => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  const { pan, name } = req.body;
-  if (!pan || !name) {
+  const { pan } = req.body;
+  if (!pan) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'PAN and name are required');
   }
-  const result = await kycService.verifyPan(pan, name);
+  const result = await verifyPan(pan);
+  console.log("result in contoller users ==>", result);
   user.kycDetails.panNumber = pan;
   user.kycDetails.panVerified = result.valid === true;
   user.kycDetails.panVerificationDate = new Date();
   user.kycDetails.panKycData = result; // Store full response for audit
+  await user.save();
+  res.send({ message: result.message, kyc: result });
+});
+
+// Verify Bank Account KYC (verify bank account and IFSC, store details)
+export const verifyBankKyc = catchAsync(async (req, res) => {
+  const user = await User.findById(req.params.userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  const { accountNumber, ifscCode } = req.body;
+  if (!accountNumber || !ifscCode) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Account number and IFSC code are required');
+  }
+  const result = await verifyBankAccount(accountNumber, ifscCode);
+  console.log("result in controller bank verification ==>", result);
+  
+  // Store bank verification details in user's KYC
+  if (!user.kycDetails.bankVerifications) {
+    user.kycDetails.bankVerifications = [];
+  }
+  
+  user.kycDetails.bankVerifications.push({
+    accountNumber: accountNumber,
+    ifscCode: ifscCode,
+    verified: result.valid === true,
+    verificationDate: new Date(),
+    bankKycData: result, // Store full response for audit
+    accountHolderName: result.accountHolderName,
+    bankName: result.bankName,
+    verificationStatus: result.verificationStatus,
+    description: result.description,
+    tsTransactionId: result.tsTransactionId
+  });
+  
   await user.save();
   res.send({ message: result.message, kyc: result });
 });
