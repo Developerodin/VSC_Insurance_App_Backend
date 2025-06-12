@@ -333,3 +333,17 @@ export const changePassword = {
   }),
 };
 
+export const verifyBankKyc = {
+  params: Joi.object().keys({
+    userId: Joi.string().custom(objectId),
+  }),
+  body: Joi.object().keys({
+    accountNumber: Joi.string().required(),
+    ifscCode: Joi.string().pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/).required(),
+    accountHolderName: Joi.string().optional(),
+    bankName: Joi.string().optional(),
+    accountType: Joi.string().valid('savings', 'current', 'salary').optional(),
+    branchName: Joi.string().optional(),
+  }),
+};
+

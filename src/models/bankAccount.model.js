@@ -73,6 +73,21 @@ const bankAccountSchema = mongoose.Schema(
       },
       verifiedAt: Date,
       notes: String,
+      // Truthscreen verification data
+      tsTransactionId: String,
+      verificationStatus: String,
+      accountHolderNameVerified: String, // Name from verification service
+      bankNameVerified: String, // Bank name from verification service
+      verificationDescription: String,
+      truthscreenData: {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed,
+      },
+      verificationMethod: {
+        type: String,
+        enum: ['manual', 'automatic', 'truthscreen'],
+        default: 'manual'
+      },
     },
     metadata: {
       type: Map,

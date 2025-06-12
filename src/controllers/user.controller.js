@@ -458,56 +458,106 @@ export const verifyAadhaarKyc = catchAsync(async (req, res) => {
 
 // Verify PAN KYC (verify PAN, store details)
 export const verifyPanKyc = catchAsync(async (req, res) => {
-  const user = await User.findById(req.params.userId);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    }
+
+    const { pan } = req.body;
+    if (!pan) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'PAN number is required');
+    }
+
+    const result = await verifyPan(pan);
+    console.log("result in controller users ==>", result);
+
+    if (!result.valid) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `PAN verification failed: ${result.message || 'Invalid PAN number'}`
+      );
+    }
+
+    user.kycDetails.panNumber = pan;
+    user.kycDetails.panVerified = true;
+    user.kycDetails.panVerificationDate = new Date();
+    user.kycDetails.panKycData = result;
+    await user.save();
+
+    res.send({ 
+      valid: true,
+      message: result.message || 'PAN verified successfully', 
+      kyc: result 
+    });
+
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      `PAN verification failed: ${error.message}`
+    );
   }
-  const { pan } = req.body;
-  if (!pan) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'PAN and name are required');
-  }
-  const result = await verifyPan(pan);
-  console.log("result in contoller users ==>", result);
-  user.kycDetails.panNumber = pan;
-  user.kycDetails.panVerified = result.valid === true;
-  user.kycDetails.panVerificationDate = new Date();
-  user.kycDetails.panKycData = result; // Store full response for audit
-  await user.save();
-  res.send({ message: result.message, kyc: result });
 });
 
 // Verify Bank Account KYC (verify bank account and IFSC, store details)
 export const verifyBankKyc = catchAsync(async (req, res) => {
-  const user = await User.findById(req.params.userId);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    }
+
+    const { accountNumber, ifscCode } = req.body;
+    if (!accountNumber || !ifscCode) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Account number and IFSC code are required');
+    }
+
+    const result = await verifyBankAccount(accountNumber, ifscCode);
+    console.log("result in controller bank verification ==>", result);
+    
+    if (!result.valid) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST, 
+        `Bank account verification failed: ${result.data?.status || 'Unknown error'}`
+      );
+    }
+
+    const bankAccount = await BankAccount.create({
+      agent: user._id,
+      accountHolderName: result.accountHolderName,
+      accountNumber: accountNumber,
+      bankName: result.bankName,
+      ifscCode: ifscCode,
+      status: 'verified',
+      verificationDetails: {
+        verifiedAt: new Date(),
+        tsTransactionId: result.tsTransactionId,
+        verificationStatus: result.verificationStatus,
+        accountHolderNameVerified: result.accountHolderName,
+        bankNameVerified: result.bankName,
+        verificationDescription: result.description,
+        verificationMethod: 'truthscreen',
+        truthscreenData: result
+      }
+    });
+
+    res.send({ 
+      valid:true,
+      message: result.message || 'Bank account verified successfully', 
+      bankAccount 
+    });
+
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      `Bank verification failed: ${error.message}`
+    );
   }
-  const { accountNumber, ifscCode } = req.body;
-  if (!accountNumber || !ifscCode) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Account number and IFSC code are required');
-  }
-  const result = await verifyBankAccount(accountNumber, ifscCode);
-  console.log("result in controller bank verification ==>", result);
-  
-  // Store bank verification details in user's KYC
-  if (!user.kycDetails.bankVerifications) {
-    user.kycDetails.bankVerifications = [];
-  }
-  
-  user.kycDetails.bankVerifications.push({
-    accountNumber: accountNumber,
-    ifscCode: ifscCode,
-    verified: result.valid === true,
-    verificationDate: new Date(),
-    bankKycData: result, // Store full response for audit
-    accountHolderName: result.accountHolderName,
-    bankName: result.bankName,
-    verificationStatus: result.verificationStatus,
-    description: result.description,
-    tsTransactionId: result.tsTransactionId
-  });
-  
-  await user.save();
-  res.send({ message: result.message, kyc: result });
 });
 

@@ -6,8 +6,8 @@ import { encrypt, decrypt } from '../utils/truthscreen.js';
 const TRUTHSCREEN_USERNAME = process.env.TRUTHSCREEN_USERNAME ;
 const TRUTHSCREEN_PASSWORD = process.env.TRUTHSCREEN_PASSWORD  ;
 const TRUTHSCREEN_BASE_URL = process.env.TRUTHSCREEN_BASE_URL ;
-const PAN_ENDPOINT = `https://www.truthscreen.com/api/v2.2/idsearch`;
-const BANK_ENDPOINT = `https://www.truthscreen.com/BankAccountVerificationApi`;
+const PAN_ENDPOINT = `${TRUTHSCREEN_BASE_URL}/api/v2.2/idsearch`;
+const BANK_ENDPOINT = `${TRUTHSCREEN_BASE_URL}/BankAccountVerificationApi`;
 
 // var encrypted =encrypt('{"transID":"1XXXX3","docType":"2","docNumber":"BXXXXXXXXX"}',<sharedpassword>);
   {/* console.log(encrypted);
