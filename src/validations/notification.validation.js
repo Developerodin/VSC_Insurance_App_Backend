@@ -5,6 +5,7 @@ const createNotification = {
   body: Joi.object().keys({
     recipient: Joi.string().custom(objectId).required(),
     type: Joi.string().valid(
+      'lead_created',
       'lead_assigned',
       'lead_status_change',
       'commission_earned',
@@ -36,6 +37,7 @@ const createNotification = {
 const getNotifications = {
   query: Joi.object().keys({
     type: Joi.string().valid(
+      'lead_created',
       'lead_assigned',
       'lead_status_change',
       'commission_earned',
@@ -88,6 +90,7 @@ const markAsRead = {
 const markAllAsRead = {
   body: Joi.object().keys({
     type: Joi.string().valid(
+      'lead_created',
       'lead_assigned',
       'lead_status_change',
       'commission_earned',
@@ -106,6 +109,7 @@ const markAllAsRead = {
 const getUnreadCount = {
   query: Joi.object().keys({
     type: Joi.string().valid(
+      'lead_created',
       'lead_assigned',
       'lead_status_change',
       'commission_earned',

@@ -11,6 +11,7 @@ const notificationSchema = mongoose.Schema(
     type: {
       type: String,
       enum: [
+        'lead_created',
         'lead_assigned',
         'lead_status_change',
         'commission_earned',
