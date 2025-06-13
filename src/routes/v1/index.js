@@ -16,6 +16,8 @@ import permissionRoute from './permission.route.js';
 import rolePermissionRoute from './rolePermission.route.js';
 import leadsFieldsRoute from './leadsFields.route.js';
 import dashboardRoute from './dashboard.route.js';
+import walletRoute from './wallet.route.js';
+import withdrawalRequestRoute from './withdrawalRequest.route.js';
 import commonRoute from '../common.routes.js';
 import * as config from '../../config/config.js';
 
@@ -85,6 +87,14 @@ const defaultRoutes = [
   {
     path: '/dashboard',
     route: dashboardRoute,
+  },
+  {
+    path: '/wallet',
+    route: walletRoute,
+  },
+  {
+    path: '/withdrawal-requests',
+    route: withdrawalRequestRoute,
   },
   {
     path: '/files',

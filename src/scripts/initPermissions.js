@@ -59,6 +59,26 @@ const defaultPermissions = [
   // Permission Management
   { name: 'managePermissions', description: 'Can manage permissions', module: 'permissions' },
   { name: 'getPermissions', description: 'Can view permissions', module: 'permissions' },
+
+  // Wallet Management
+  { name: 'getWallet', description: 'Can view wallet details', module: 'wallet' },
+  { name: 'getWalletTransactions', description: 'Can view wallet transactions', module: 'wallet' },
+  { name: 'getWalletStats', description: 'Can view wallet statistics', module: 'wallet' },
+  { name: 'getCommissionEarnings', description: 'Can view commission earnings', module: 'wallet' },
+  { name: 'getWithdrawalHistory', description: 'Can view withdrawal history', module: 'wallet' },
+  { name: 'getPendingWithdrawals', description: 'Can view pending withdrawals', module: 'wallet' },
+  { name: 'getRecentTransactions', description: 'Can view recent transactions', module: 'wallet' },
+  { name: 'getTransactionDetails', description: 'Can view transaction details', module: 'wallet' },
+  { name: 'manageWallets', description: 'Can manage wallets', module: 'wallet' },
+
+  // Withdrawal Request Management
+  { name: 'getWithdrawalRequests', description: 'Can view withdrawal requests', module: 'withdrawalRequests' },
+  { name: 'manageWithdrawalRequests', description: 'Can manage withdrawal requests', module: 'withdrawalRequests' },
+  { name: 'rejectWithdrawalRequest', description: 'Can reject withdrawal requests', module: 'withdrawalRequests' },
+  { name: 'markWithdrawalRequestAsPaid', description: 'Can mark withdrawal requests as paid', module: 'withdrawalRequests' },
+  { name: 'approveWithdrawalRequest', description: 'Can approve withdrawal requests', module: 'withdrawalRequests' },
+  { name: 'getUserWithdrawalRequests', description: 'Can view user withdrawal requests', module: 'withdrawalRequests' },
+  { name: 'createWithdrawalRequest', description: 'Can create withdrawal requests', module: 'withdrawalRequests' },
 ];
 
 const initPermissions = async () => {

@@ -37,7 +37,13 @@ const updateRolePermissions = async () => {
         'manageCommissions',
         'getNotifications',
         'getSettings',
-        'manageLeads'
+        'manageLeads',
+        'getWallet',
+        'manageWallets',
+        'getWithdrawalRequests',
+'getUserWithdrawalRequests',
+'createWithdrawalRequest',
+
       ],
       admin: [
         // User permissions
@@ -78,6 +84,16 @@ const updateRolePermissions = async () => {
         'accessAdminPanel',
         'adminViewUsers',
         'adminManageKyc',
+        'getWallet',
+        'manageWallets',
+        'getWithdrawalRequests',
+        'manageWithdrawalRequests',
+         'rejectWithdrawalRequest',
+         'markWithdrawalRequestAsPaid',
+         'approveWithdrawalRequest',
+         'getUserWithdrawalRequests',
+         'createWithdrawalRequest',
+
      
       ],
       superAdmin: [
@@ -112,6 +128,15 @@ const updateRolePermissions = async () => {
         'accessAdminPanel',
         'adminViewUsers',
         'adminManageKyc',
+        'getWallet',
+        'manageWallets',
+        'getWithdrawalRequests',
+        'manageWithdrawalRequests',
+         'rejectWithdrawalRequest',
+         'markWithdrawalRequestAsPaid',
+         'approveWithdrawalRequest',
+         'getUserWithdrawalRequests',
+         'createWithdrawalRequest',
       
       ]
     };

@@ -3,48 +3,257 @@ import { Wallet, WalletTransaction, User, Notification } from '../models/index.j
 import ApiError from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
 import { pick } from '../utils/pick.js';
+import walletService from '../services/wallet.service.js';
 
-// Get wallet details
-export const getWallet = catchAsync(async (req, res) => {
-  const wallet = await Wallet.findOne({ user: req.user.id })
-    .populate('user', 'name email');
-
+/**
+ * Get user's wallet details
+ */
+const getWallet = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
   if (!wallet) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+    // Create wallet if it doesn't exist
+    const newWallet = await walletService.createWallet(userId);
+    return res.status(httpStatus.OK).send({
+      status: 'success',
+      data: {
+        wallet: newWallet,
+      },
+    });
   }
 
-  res.send(wallet);
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      wallet,
+    },
+  });
 });
 
-// Get wallet transactions
-export const getWalletTransactions = catchAsync(async (req, res) => {
-  const wallet = await Wallet.findOne({ user: req.user.id });
+/**
+ * Get user's wallet transactions
+ */
+const getWalletTransactions = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
   if (!wallet) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
   }
 
+  const { type, status, startDate, endDate, sortBy, limit, page } = req.query;
   const filter = { wallet: wallet._id };
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
 
-  if (req.query.type) filter.type = req.query.type;
-  if (req.query.status) filter.status = req.query.status;
-  if (req.query.startDate && req.query.endDate) {
+  if (type) filter.type = type;
+  if (status) filter.status = status;
+  if (startDate && endDate) {
     filter.createdAt = {
-      $gte: new Date(req.query.startDate),
-      $lte: new Date(req.query.endDate),
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
     };
   }
 
-  const transactions = await WalletTransaction.paginate(filter, {
-    ...options,
-    populate: 'reference',
-  });
+  const options = {
+    sortBy,
+    limit: parseInt(limit, 10),
+    page: parseInt(page, 10),
+  };
 
-  res.send(transactions);
+  const transactions = await WalletTransaction.paginate(filter, options);
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: transactions,
+  });
 });
 
-// Create wallet (called when user is created)
-export const createWallet = catchAsync(async (userId) => {
+/**
+ * Get user's wallet statistics
+ */
+const getWalletStats = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
+  if (!wallet) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+  }
+
+  const stats = await walletService.getWalletStats(userId);
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: stats,
+  });
+});
+
+/**
+ * Get user's commission earnings
+ */
+const getCommissionEarnings = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
+  if (!wallet) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+  }
+
+  const { startDate, endDate } = req.query;
+  const filter = {
+    wallet: wallet._id,
+    type: 'commission',
+  };
+
+  if (startDate && endDate) {
+    filter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    };
+  }
+
+  const earnings = await WalletTransaction.find(filter)
+    .sort({ createdAt: -1 })
+    .populate('reference', 'amount percentage baseAmount bonus');
+
+  const totalEarnings = earnings.reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      totalEarnings,
+      transactions: earnings,
+    },
+  });
+});
+
+/**
+ * Get user's withdrawal history
+ */
+const getWithdrawalHistory = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
+  if (!wallet) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+  }
+
+  const { startDate, endDate } = req.query;
+  const filter = {
+    wallet: wallet._id,
+    type: 'withdrawal',
+  };
+
+  if (startDate && endDate) {
+    filter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    };
+  }
+
+  const withdrawals = await WalletTransaction.find(filter)
+    .sort({ createdAt: -1 })
+    .populate('reference', 'status bankAccount paymentDetails');
+
+  const totalWithdrawn = withdrawals.reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      totalWithdrawn,
+      transactions: withdrawals,
+    },
+  });
+});
+
+/**
+ * Get user's pending withdrawals
+ */
+const getPendingWithdrawals = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
+  if (!wallet) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+  }
+
+  const filter = {
+    wallet: wallet._id,
+    type: 'withdrawal',
+    status: 'pending',
+  };
+
+  const pendingWithdrawals = await WalletTransaction.find(filter)
+    .sort({ createdAt: -1 })
+    .populate('reference', 'bankAccount');
+
+  const totalPending = pendingWithdrawals.reduce((sum, transaction) => sum + transaction.amount, 0);
+
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      totalPending,
+      transactions: pendingWithdrawals,
+    },
+  });
+});
+
+/**
+ * Get user's recent transactions
+ */
+const getRecentTransactions = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
+  if (!wallet) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+  }
+
+  const { limit = 5 } = req.query;
+  const transactions = await WalletTransaction.find({ wallet: wallet._id })
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit, 10))
+    .populate('reference');
+
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      transactions,
+    },
+  });
+});
+
+/**
+ * Get user's transaction details
+ */
+const getTransactionDetails = catchAsync(async (req, res) => {
+  const userId = req.user._id;
+  const wallet = await Wallet.findOne({ user: userId });
+  
+  if (!wallet) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
+  }
+
+  const transaction = await WalletTransaction.findById(req.params.transactionId)
+    .populate('reference');
+
+  if (!transaction) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Transaction not found');
+  }
+
+  if (transaction.wallet.toString() !== wallet._id.toString()) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+  }
+
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      transaction,
+    },
+  });
+});
+
+/**
+ * Create wallet (called when user is created)
+ */
+const createWallet = catchAsync(async (userId) => {
   const existingWallet = await Wallet.findOne({ user: userId });
   if (existingWallet) {
     return existingWallet;
@@ -67,8 +276,10 @@ export const createWallet = catchAsync(async (userId) => {
   return wallet;
 });
 
-// Update wallet balance (internal function)
-export const updateWalletBalance = catchAsync(async (walletId, amount, type, reference, referenceModel, description) => {
+/**
+ * Update wallet balance (internal function)
+ */
+const updateWalletBalance = catchAsync(async (walletId, amount, type, reference, referenceModel, description) => {
   const wallet = await Wallet.findById(walletId);
   if (!wallet) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
@@ -89,12 +300,12 @@ export const updateWalletBalance = catchAsync(async (walletId, amount, type, ref
 
   // Update wallet
   wallet.balance = newBalance;
-  wallet.lastTransactionAt = new Date();
+  wallet.lastTransactionDate = new Date();
   await wallet.save();
 
   // Create transaction record
   const transaction = await WalletTransaction.create({
-    wallet: walletId,
+    wallet: wallet._id,
     type,
     amount,
     balance: newBalance,
@@ -107,34 +318,14 @@ export const updateWalletBalance = catchAsync(async (walletId, amount, type, ref
   return { wallet, transaction };
 });
 
-// Get wallet statistics
-export const getWalletStats = catchAsync(async (req, res) => {
-  const wallet = await Wallet.findOne({ user: req.user.id });
-  if (!wallet) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
-  }
+/**
+ * Update wallet status (admin only)
+ */
+const updateWalletStatus = catchAsync(async (req, res) => {
+  const { walletId } = req.params;
+  const { status, reason } = req.body;
 
-  const stats = await WalletTransaction.aggregate([
-    { $match: { wallet: wallet._id } },
-    {
-      $group: {
-        _id: '$type',
-        count: { $sum: 1 },
-        totalAmount: { $sum: '$amount' },
-      },
-    },
-  ]);
-
-  res.send({
-    wallet,
-    stats,
-  });
-});
-
-// Update wallet status (admin only)
-export const updateWalletStatus = catchAsync(async (req, res) => {
-  const { status } = req.body;
-  const wallet = await Wallet.findById(req.params.walletId);
+  const wallet = await Wallet.findById(walletId);
   if (!wallet) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Wallet not found');
   }
@@ -142,27 +333,27 @@ export const updateWalletStatus = catchAsync(async (req, res) => {
   wallet.status = status;
   await wallet.save();
 
-  // Create notification for user
-  await Notification.create({
-    recipient: wallet.user,
-    type: 'wallet_status_change',
-    title: 'Wallet Status Updated',
-    message: `Your wallet status has been updated to: ${status}`,
-    channels: ['in_app', 'email'],
+  // Create notification
+  await createWalletStatusNotification(wallet.user, status, reason);
+
+  res.status(httpStatus.OK).send({
+    status: 'success',
     data: {
-      walletId: wallet._id,
-      status,
+      wallet,
     },
   });
-
-  res.send(wallet);
 });
 
-export default {
+export {
   getWallet,
   getWalletTransactions,
+  getWalletStats,
+  getCommissionEarnings,
+  getWithdrawalHistory,
+  getPendingWithdrawals,
+  getRecentTransactions,
+  getTransactionDetails,
   createWallet,
   updateWalletBalance,
-  getWalletStats,
   updateWalletStatus,
 }; 

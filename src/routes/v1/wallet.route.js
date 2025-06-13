@@ -31,6 +31,50 @@ router
     walletController.getWalletStats
   );
 
+// Get commission earnings
+router
+  .route('/earnings')
+  .get(
+    auth('getWallet'),
+    validate(walletValidation.getCommissionEarnings),
+    walletController.getCommissionEarnings
+  );
+
+// Get withdrawal history
+router
+  .route('/withdrawals')
+  .get(
+    auth('getWallet'),
+    validate(walletValidation.getWithdrawalHistory),
+    walletController.getWithdrawalHistory
+  );
+
+// Get pending withdrawals
+router
+  .route('/withdrawals/pending')
+  .get(
+    auth('getWallet'),
+    walletController.getPendingWithdrawals
+  );
+
+// Get recent transactions
+router
+  .route('/transactions/recent')
+  .get(
+    auth('getWallet'),
+    validate(walletValidation.getRecentTransactions),
+    walletController.getRecentTransactions
+  );
+
+// Get transaction details
+router
+  .route('/transactions/:transactionId')
+  .get(
+    auth('getWallet'),
+    validate(walletValidation.getTransactionDetails),
+    walletController.getTransactionDetails
+  );
+
 // Update wallet status (admin only)
 router
   .route('/:walletId/status')

@@ -1,23 +1,30 @@
 import Joi from 'joi';
 import { objectId } from './custom.validation.js';
 
+const notificationTypes = [
+  'lead_created',
+  'lead_assigned',
+  'lead_status_change',
+  'commission_earned',
+  'payout_processed',
+  'kyc_verified',
+  'bank_account_verified',
+  'product_update',
+  'system_announcement',
+  'follow_up_reminder',
+  'document_uploaded',
+  'wallet_status_change',
+  'withdrawal_request_created',
+  'withdrawal_request_approved',
+  'withdrawal_request_rejected',
+  'withdrawal_request_paid',
+  'other'
+];
+
 const createNotification = {
   body: Joi.object().keys({
     recipient: Joi.string().custom(objectId).required(),
-    type: Joi.string().valid(
-      'lead_created',
-      'lead_assigned',
-      'lead_status_change',
-      'commission_earned',
-      'payout_processed',
-      'kyc_verified',
-      'bank_account_verified',
-      'product_update',
-      'system_announcement',
-      'follow_up_reminder',
-      'document_uploaded',
-      'other'
-    ).required(),
+    type: Joi.string().valid(...notificationTypes).required(),
     title: Joi.string().required(),
     message: Joi.string().required(),
     priority: Joi.string().valid('low', 'medium', 'high').default('medium'),
@@ -36,20 +43,7 @@ const createNotification = {
 
 const getNotifications = {
   query: Joi.object().keys({
-    type: Joi.string().valid(
-      'lead_created',
-      'lead_assigned',
-      'lead_status_change',
-      'commission_earned',
-      'payout_processed',
-      'kyc_verified',
-      'bank_account_verified',
-      'product_update',
-      'system_announcement',
-      'follow_up_reminder',
-      'document_uploaded',
-      'other'
-    ),
+    type: Joi.string().valid(...notificationTypes),
     status: Joi.string().valid('unread', 'read', 'archived'),
     priority: Joi.string().valid('low', 'medium', 'high'),
     sortBy: Joi.string(),
@@ -89,39 +83,13 @@ const markAsRead = {
 
 const markAllAsRead = {
   body: Joi.object().keys({
-    type: Joi.string().valid(
-      'lead_created',
-      'lead_assigned',
-      'lead_status_change',
-      'commission_earned',
-      'payout_processed',
-      'kyc_verified',
-      'bank_account_verified',
-      'product_update',
-      'system_announcement',
-      'follow_up_reminder',
-      'document_uploaded',
-      'other'
-    ),
+    type: Joi.string().valid(...notificationTypes),
   }),
 };
 
 const getUnreadCount = {
   query: Joi.object().keys({
-    type: Joi.string().valid(
-      'lead_created',
-      'lead_assigned',
-      'lead_status_change',
-      'commission_earned',
-      'payout_processed',
-      'kyc_verified',
-      'bank_account_verified',
-      'product_update',
-      'system_announcement',
-      'follow_up_reminder',
-      'document_uploaded',
-      'other'
-    ),
+    type: Joi.string().valid(...notificationTypes),
   }),
 };
 
@@ -132,7 +100,7 @@ const getNotificationStats = {
   }),
 };
 
-export{
+export {
   createNotification,
   getNotifications,
   getNotification,

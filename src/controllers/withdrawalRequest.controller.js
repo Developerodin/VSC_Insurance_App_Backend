@@ -1,24 +1,24 @@
 import httpStatus from 'http-status';
 import { WithdrawalRequest, Commission } from '../models/index.js';
-import { ApiError } from '../utils/ApiError.js';
+import ApiError from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
-import { sendNotification } from '../services/notification.service.js';
+import { createWithdrawalRequestNotification } from '../services/notification.service.js';
 import walletService from '../services/wallet.service.js';
 
 // Create a new withdrawal request
 const createWithdrawalRequest = catchAsync(async (req, res) => {
   const { amount, bankAccount } = req.body;
-  const userId = req.user.id;
+  const agent = req.user.id;
 
   // Get pending commissions
   const pendingCommissions = await Commission.find({
-    agent: userId,
+    agent: agent,
     status: 'pending',
   });
 
   // Create withdrawal request
   const withdrawalRequest = await WithdrawalRequest.create({
-    agent: userId,
+    agent,
     amount,
     bankAccount,
     status: 'pending',
@@ -33,21 +33,20 @@ const createWithdrawalRequest = catchAsync(async (req, res) => {
 
   // Update wallet
   const wallet = await walletService.updateWalletOnWithdrawalRequest(
-    userId,
+    agent,
     amount,
     withdrawalRequest._id
   );
 
-  // Send notification
-  await sendNotification({
-    user: userId,
-    title: 'Withdrawal Request Created',
-    message: `Your withdrawal request for $${amount} has been created and is pending approval.`,
-    type: 'withdrawal_request',
-    data: { withdrawalRequestId: withdrawalRequest._id },
-  });
+  // Create notification
+  await createWithdrawalRequestNotification(agent, withdrawalRequest);
 
-  res.status(httpStatus.CREATED).send(withdrawalRequest);
+  res.status(httpStatus.CREATED).send({
+    status: 'success',
+    data: {
+      withdrawalRequest,
+    },
+  });
 });
 
 // Get all withdrawal requests (admin only)
@@ -92,7 +91,7 @@ const getWithdrawalRequest = catchAsync(async (req, res) => {
 // Approve withdrawal request (admin only)
 const approveWithdrawalRequest = catchAsync(async (req, res) => {
   const { withdrawalRequestId } = req.params;
-  const { adminNote } = req.body;
+  const { rejectionReason } = req.body;
 
   const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId);
   if (!withdrawalRequest) {
@@ -104,33 +103,23 @@ const approveWithdrawalRequest = catchAsync(async (req, res) => {
   }
 
   withdrawalRequest.status = 'approved';
-  withdrawalRequest.adminNote = adminNote;
-  withdrawalRequest.approvedBy = req.user.id;
-  withdrawalRequest.approvedAt = new Date();
   await withdrawalRequest.save();
 
-  // Update commission statuses
-  await Commission.updateMany(
-    { _id: { $in: withdrawalRequest.commissions } },
-    { status: 'withdrawal_approved' }
-  );
+  // Create notification
+  await createWithdrawalRequestNotification(withdrawalRequest.agent, withdrawalRequest);
 
-  // Send notification
-  await sendNotification({
-    user: withdrawalRequest.agent,
-    title: 'Withdrawal Request Approved',
-    message: `Your withdrawal request for $${withdrawalRequest.amount} has been approved.`,
-    type: 'withdrawal_request',
-    data: { withdrawalRequestId: withdrawalRequest._id },
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      withdrawalRequest,
+    },
   });
-
-  res.send(withdrawalRequest);
 });
 
 // Reject withdrawal request (admin only)
 const rejectWithdrawalRequest = catchAsync(async (req, res) => {
   const { withdrawalRequestId } = req.params;
-  const { reason } = req.body;
+  const { rejectionReason } = req.body;
 
   const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId);
   if (!withdrawalRequest) {
@@ -142,40 +131,23 @@ const rejectWithdrawalRequest = catchAsync(async (req, res) => {
   }
 
   withdrawalRequest.status = 'rejected';
-  withdrawalRequest.rejectionReason = reason;
-  withdrawalRequest.rejectedBy = req.user.id;
-  withdrawalRequest.rejectedAt = new Date();
+  withdrawalRequest.rejectionReason = rejectionReason;
   await withdrawalRequest.save();
 
-  // Update commission statuses
-  await Commission.updateMany(
-    { _id: { $in: withdrawalRequest.commissions } },
-    { status: 'pending' }
-  );
+  // Create notification
+  await createWithdrawalRequestNotification(withdrawalRequest.agent, withdrawalRequest);
 
-  // Update wallet
-  await walletService.updateWalletOnWithdrawalRejection(
-    withdrawalRequest.agent,
-    withdrawalRequest.amount,
-    withdrawalRequest._id
-  );
-
-  // Send notification
-  await sendNotification({
-    user: withdrawalRequest.agent,
-    title: 'Withdrawal Request Rejected',
-    message: `Your withdrawal request for $${withdrawalRequest.amount} has been rejected. Reason: ${reason}`,
-    type: 'withdrawal_request',
-    data: { withdrawalRequestId: withdrawalRequest._id },
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      withdrawalRequest,
+    },
   });
-
-  res.send(withdrawalRequest);
 });
 
 // Mark withdrawal request as paid (admin only)
 const markWithdrawalRequestAsPaid = catchAsync(async (req, res) => {
   const { withdrawalRequestId } = req.params;
-  const { paymentDetails } = req.body;
 
   const withdrawalRequest = await WithdrawalRequest.findById(withdrawalRequestId);
   if (!withdrawalRequest) {
@@ -186,28 +158,22 @@ const markWithdrawalRequestAsPaid = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Withdrawal request is not approved');
   }
 
+  // Update wallet balance
+  await walletService.updateWalletBalance(withdrawalRequest.agent, withdrawalRequest.amount, 'withdrawal');
+
   withdrawalRequest.status = 'paid';
-  withdrawalRequest.paymentDetails = paymentDetails;
-  withdrawalRequest.paidBy = req.user.id;
   withdrawalRequest.paidAt = new Date();
   await withdrawalRequest.save();
 
-  // Update commission statuses
-  await Commission.updateMany(
-    { _id: { $in: withdrawalRequest.commissions } },
-    { status: 'paid' }
-  );
+  // Create notification
+  await createWithdrawalRequestNotification(withdrawalRequest.agent, withdrawalRequest);
 
-  // Send notification
-  await sendNotification({
-    user: withdrawalRequest.agent,
-    title: 'Withdrawal Request Paid',
-    message: `Your withdrawal request for $${withdrawalRequest.amount} has been paid.`,
-    type: 'withdrawal_request',
-    data: { withdrawalRequestId: withdrawalRequest._id },
+  res.status(httpStatus.OK).send({
+    status: 'success',
+    data: {
+      withdrawalRequest,
+    },
   });
-
-  res.send(withdrawalRequest);
 });
 
 export {

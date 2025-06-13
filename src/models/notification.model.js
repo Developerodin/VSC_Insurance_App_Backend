@@ -22,6 +22,11 @@ const notificationSchema = mongoose.Schema(
         'system_announcement',
         'follow_up_reminder',
         'document_uploaded',
+        'wallet_status_change',
+        'withdrawal_request_created',
+        'withdrawal_request_approved',
+        'withdrawal_request_rejected',
+        'withdrawal_request_paid',
         'other'
       ],
       required: true,
