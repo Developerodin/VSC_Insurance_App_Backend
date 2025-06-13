@@ -3,7 +3,7 @@ import { pick } from '../utils/pick.js';
 import ApiError from '../utils/ApiError.js';
 import {catchAsync} from '../utils/catchAsync.js';
 import * as userService from '../services/user.service.js';
-import { User, Notification, BankAccount } from '../models/index.js';
+import { User, Notification, BankAccount, Commission, Lead } from '../models/index.js';
 import * as kycService from '../services/kyc.service.js';
 import { verifyPan, verifyBankAccount } from '../services/truthscreen.service.js';
 
@@ -559,5 +559,177 @@ export const verifyBankKyc = catchAsync(async (req, res) => {
       `Bank verification failed: ${error.message}`
     );
   }
+});
+
+// Get user's commission statistics
+export const getUserCommissionStats = catchAsync(async (req, res) => {
+  const userId = req.params.userId;
+  
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  // Check if the requesting user can view commission stats for this user
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You can only view your own commission statistics');
+  }
+
+  const stats = await Commission.aggregate([
+    { $match: { agent: user._id } },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        totalAmount: { $sum: '$amount' },
+        totalBonus: { $sum: '$bonus' }
+      }
+    }
+  ]);
+
+  // Calculate total earnings
+  const totalEarnings = await Commission.aggregate([
+    { $match: { agent: user._id } },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: '$amount' },
+        totalBonus: { $sum: '$bonus' }
+      }
+    }
+  ]);
+
+  res.send({
+    stats,
+    totalEarnings: totalEarnings[0] || { total: 0, totalBonus: 0 }
+  });
+});
+
+// Get user's commission history
+export const getUserCommissionHistory = catchAsync(async (req, res) => {
+  const userId = req.params.userId;
+  
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  // Check if the requesting user can view commission history for this user
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You can only view your own commission history');
+  }
+
+  const filter = { agent: userId };
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  
+  if (req.query.status) filter.status = req.query.status;
+  if (req.query.startDate && req.query.endDate) {
+    filter.createdAt = {
+      $gte: new Date(req.query.startDate),
+      $lte: new Date(req.query.endDate)
+    };
+  }
+
+  const commissions = await Commission.paginate(filter, {
+    ...options,
+    populate: 'lead product',
+    select: 'amount percentage baseAmount bonus status createdAt paymentDetails'
+  });
+
+  res.send(commissions);
+});
+
+// Get commission details for a specific lead
+export const getLeadCommissionDetails = catchAsync(async (req, res) => {
+  const { userId, leadId } = req.params;
+  
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  // Check if the requesting user can view commission details for this lead
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You can only view commission details for your own leads');
+  }
+
+  // Check if lead exists and belongs to the user
+  const lead = await Lead.findOne({ _id: leadId, agent: userId });
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found or does not belong to you');
+  }
+
+  const commission = await Commission.findOne({ lead: leadId })
+    .populate('product', 'name commission')
+    .populate('paymentDetails.bankAccount', 'accountHolderName accountNumber bankName');
+
+  if (!commission) {
+    return res.send({ message: 'No commission record found for this lead' });
+  }
+
+  res.send(commission);
+});
+
+// Get user's pending commissions
+export const getUserPendingCommissions = catchAsync(async (req, res) => {
+  const userId = req.params.userId;
+  
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  // Check if the requesting user can view pending commissions for this user
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You can only view your own pending commissions');
+  }
+
+  const filter = { 
+    agent: userId,
+    status: 'pending'
+  };
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+
+  const pendingCommissions = await Commission.paginate(filter, {
+    ...options,
+    populate: 'lead product',
+    select: 'amount percentage baseAmount bonus status createdAt'
+  });
+
+  res.send(pendingCommissions);
+});
+
+// Get user's paid commissions
+export const getUserPaidCommissions = catchAsync(async (req, res) => {
+  const userId = req.params.userId;
+  
+  // Check if user exists
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  
+  // Check if the requesting user can view paid commissions for this user
+  if (req.user.id !== userId && req.user.role !== 'admin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'You can only view your own paid commissions');
+  }
+
+  const filter = { 
+    agent: userId,
+    status: 'paid'
+  };
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+
+  const paidCommissions = await Commission.paginate(filter, {
+    ...options,
+    populate: 'lead product paymentDetails.bankAccount',
+    select: 'amount percentage baseAmount bonus status createdAt paymentDetails'
+  });
+
+  res.send(paidCommissions);
 });
 

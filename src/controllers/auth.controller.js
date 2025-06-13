@@ -6,6 +6,7 @@ import { generateAuthTokens,generateResetPasswordToken,generateVerifyEmailToken 
 import { loginUserWithEmailAndPassword,logout as logout2,refreshAuth,resetPassword as resetPassword2,verifyEmail as verifyEmail2  } from '../services/auth.service.js';
 import { sendResetPasswordEmail,sendVerificationEmail as sendVerificationEmail2, sendEmailOtp, sendPasswordResetOtp } from '../services/email.service.js';
 import otpStore from '../utils/otpStore.js';
+import walletService from '../services/wallet.service.js';
 // import { authService, userService, tokenService, emailService } from '../services/index.js';
 // import { authService, userService, tokenService, emailService } from '../services';
 
@@ -42,11 +43,20 @@ const loginOrSendOtp = catchAsync(async (req, res) => {
   if (!entry || entry.otp !== otp || entry.password !== password || entry.expiresAt < Date.now()) {
     return res.status(httpStatus.BAD_REQUEST).send({ message: 'Invalid or expired OTP' });
   }
+
   // Create user
   const user = await createUser({ email, password, isEmailVerified: true });
+
+  // Create wallet for the new user
+  const wallet = await walletService.getOrCreateWallet(user._id);
+
+  // Delete OTP entry
   otpStore.delete(email);
+
+  // Generate auth tokens
   const tokens = await generateAuthTokens(user);
-  res.send({ user, tokens });
+
+  res.send({ user, wallet, tokens });
 });
 
 const forgotPassword = catchAsync(async (req, res) => {

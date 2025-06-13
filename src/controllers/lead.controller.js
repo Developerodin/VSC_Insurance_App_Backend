@@ -1,7 +1,8 @@
 import httpStatus from 'http-status';
-import { Lead, User, Notification } from '../models/index.js';
+import { Lead, User, Notification, Commission, Subcategory, Wallet, WalletTransaction } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import {catchAsync} from '../utils/catchAsync.js';
+import walletService from '../services/wallet.service.js';
 
 export const createLead = catchAsync(async (req, res) => {
   const lead = await Lead.create({
@@ -9,26 +10,22 @@ export const createLead = catchAsync(async (req, res) => {
     agent: req.user.id,
   });
 
-  // Create notification for the agent
+  // Update wallet statistics for lead creation
+  await walletService.updateWalletOnLeadCreation(req.user.id);
+
+  // Create notification
   await Notification.create({
     recipient: req.user.id,
-    type: 'lead_assigned',
-    title: 'New Lead Assigned',
-    message: `A new lead has been assigned to you`,
+    type: 'lead_created',
+    title: 'New Lead Created',
+    message: 'A new lead has been created',
     channels: ['in_app', 'email'],
     data: {
       leadId: lead._id,
     },
   });
 
-  // Populate and return the created lead
-  const populatedLead = await Lead.findById(lead._id)
-    .populate('agent', 'name email')
-    .populate('category')
-    .populate('subcategory')
-    .populate('products.product');
-
-  res.status(httpStatus.CREATED).send(populatedLead);
+  res.status(httpStatus.CREATED).send(lead);
 });
 
 export const getLeads = catchAsync(async (req, res) => {
@@ -65,11 +62,11 @@ export const getLead = catchAsync(async (req, res) => {
 
 export const updateLead = catchAsync(async (req, res) => {
   let lead = await Lead.findById(req.params.leadId)
-    .populate('agent', 'name email');
+    .populate('agent', 'name email')
+    .populate('subcategory');
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
   }
-
 
   const oldStatus = lead.status;
   Object.assign(lead, req.body);
@@ -89,6 +86,50 @@ export const updateLead = catchAsync(async (req, res) => {
         newStatus: lead.status,
       },
     });
+
+    // If status changed to closed and subcategory exists, create commission and update wallet
+    if (lead.status === 'closed' && lead.subcategory) {
+      const subcategory = await Subcategory.findById(lead.subcategory._id);
+      if (subcategory && subcategory.commission) {
+        // Calculate commission amount
+        const commissionAmount = subcategory.commission.percentage * subcategory.pricing.basePrice / 100;
+        const totalAmount = commissionAmount + (subcategory.commission.bonus || 0);
+
+        // Create commission
+        const commission = await Commission.create({
+          agent: lead.agent._id,
+          product: lead.products[0].product,
+          lead: lead._id,
+          amount: totalAmount,
+          percentage: subcategory.commission.percentage,
+          baseAmount: subcategory.pricing.basePrice,
+          bonus: subcategory.commission.bonus || 0,
+          status: 'pending',
+        });
+
+        // Update wallet
+        const wallet = await walletService.updateWalletOnLeadClosure(
+          lead.agent._id,
+          totalAmount,
+          commission._id,
+          lead._id
+        );
+
+        // Create notification for commission
+        await Notification.create({
+          recipient: lead.agent._id,
+          type: 'commission_earned',
+          title: 'Commission Earned',
+          message: `You have earned a commission of $${totalAmount} for closing the lead`,
+          channels: ['in_app', 'email'],
+          data: {
+            commissionId: commission._id,
+            amount: totalAmount,
+            walletBalance: wallet.balance,
+          },
+        });
+      }
+    }
   }
 
   // Fetch and populate the updated lead

@@ -12,6 +12,9 @@ import Role from './role.model.js';
 import Permission from './permission.model.js';
 import RolePermission from './rolePermission.model.js';
 import LeadsFields from './leadsFields.model.js';
+import { WithdrawalRequest } from './withdrawalRequest.model.js';
+import { Wallet } from './wallet.model.js';
+import { WalletTransaction } from './walletTransaction.model.js';
 
 export {
   User,
@@ -28,5 +31,8 @@ export {
   Permission,
   RolePermission,
   LeadsFields,
+  WithdrawalRequest,
+  Wallet,
+  WalletTransaction,
 };
 

@@ -4,6 +4,7 @@ import ApiError from '../utils/ApiError.js';
 import User from '../models/user.model.js';
 import * as rolePermissionService from './rolePermission.service.js';
 import { Role } from '../models/index.js';
+import walletService from './wallet.service.js';
 
 
 /**
@@ -15,7 +16,12 @@ const createUser = async (userBody) => {
   if (await User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
-  return User.create(userBody);
+  const user = await User.create(userBody);
+
+  // Create wallet for the new user
+  await walletService.getOrCreateWallet(user._id);
+
+  return user;
 };
 
 /**

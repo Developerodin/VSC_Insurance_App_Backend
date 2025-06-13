@@ -75,6 +75,27 @@ router.post('/:userId/kyc/aadhaar/verify', userController.verifyAadhaarKyc);
 router.post('/:userId/kyc/pan/verify', userController.verifyPanKyc);
 router.post('/:userId/kyc/bank/verify', userController.verifyBankKyc);
 
+// Commission related routes
+router
+  .route('/:userId/commissions/stats')
+  .get(auth('getCommissions'), userController.getUserCommissionStats);
+
+router
+  .route('/:userId/commissions/history')
+  .get(auth('getCommissions'), userController.getUserCommissionHistory);
+
+router
+  .route('/:userId/commissions/pending')
+  .get(auth('getCommissions'), userController.getUserPendingCommissions);
+
+router
+  .route('/:userId/commissions/paid')
+  .get(auth('getCommissions'), userController.getUserPaidCommissions);
+
+router
+  .route('/:userId/leads/:leadId/commission')
+  .get(auth('getCommissions'), userController.getLeadCommissionDetails);
+
 export default router;
 
 /**
