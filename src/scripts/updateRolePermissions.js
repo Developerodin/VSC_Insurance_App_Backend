@@ -40,9 +40,9 @@ const updateRolePermissions = async () => {
         'manageLeads',
         'getWallet',
         'manageWallets',
-        'getWithdrawalRequests',
-'getUserWithdrawalRequests',
-'createWithdrawalRequest',
+        'getWithdrawalRequest',
+        'getUserWithdrawalRequests',
+        'createWithdrawalRequest',
 
       ],
       admin: [
@@ -93,6 +93,7 @@ const updateRolePermissions = async () => {
          'approveWithdrawalRequest',
          'getUserWithdrawalRequests',
          'createWithdrawalRequest',
+         'getWithdrawalRequest',
 
      
       ],
@@ -137,7 +138,7 @@ const updateRolePermissions = async () => {
          'approveWithdrawalRequest',
          'getUserWithdrawalRequests',
          'createWithdrawalRequest',
-      
+         'getWithdrawalRequest'
       ]
     };
 

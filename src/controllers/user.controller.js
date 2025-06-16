@@ -478,7 +478,7 @@ export const verifyPanKyc = catchAsync(async (req, res) => {
         `PAN verification failed: ${result.message || 'Invalid PAN number'}`
       );
     }
-
+   user.name=result.name;
     user.kycDetails.panNumber = pan;
     user.kycDetails.panVerified = true;
     user.kycDetails.panVerificationDate = new Date();
@@ -525,6 +525,14 @@ export const verifyBankKyc = catchAsync(async (req, res) => {
       );
     }
 
+    // Check if account holder name matches user's name
+    if (result.accountHolderName.toLowerCase() !== user.name.toLowerCase()) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Account holder name does not match with PAN name. Cannot add bank account.'
+      );
+    }
+
     const bankAccount = await BankAccount.create({
       agent: user._id,
       accountHolderName: result.accountHolderName,
@@ -533,8 +541,8 @@ export const verifyBankKyc = catchAsync(async (req, res) => {
       ifscCode: ifscCode,
       status: 'verified',
       verificationDetails: {
-        verifiedAt: new Date(),
-        tsTransactionId: result.tsTransactionId,
+      verifiedAt: new Date(),
+      tsTransactionId: result.tsTransactionId,
         verificationStatus: result.verificationStatus,
         accountHolderNameVerified: result.accountHolderName,
         bankNameVerified: result.bankName,
