@@ -4,8 +4,20 @@ import ApiError from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
 
 export const createCategory = catchAsync(async (req, res) => {
-  const category = await Category.create(req.body);
-  res.status(httpStatus.CREATED).send(category);
+  // Check if a category with the same name already exists
+  const existingCategory = await Category.findOne({ name: req.body.name });
+  
+  if (existingCategory) {
+    // Return a warning but still create the category
+    const category = await Category.create(req.body);
+    res.status(httpStatus.CREATED).send({
+      ...category.toJSON(),
+      warning: `A category with name "${req.body.name}" already exists (ID: ${existingCategory._id})`
+    });
+  } else {
+    const category = await Category.create(req.body);
+    res.status(httpStatus.CREATED).send(category);
+  }
 });
 
 export const getCategories = catchAsync(async (req, res) => {
