@@ -3,7 +3,8 @@ import { objectId } from './custom.validation.js';
 
 const fieldDefinition = Joi.object({
   name: Joi.string().required().trim().min(1).max(100),
-  type: Joi.string().required().trim().min(1).max(50)
+  type: Joi.string().required().trim().min(1).max(50),
+  fieldOption: Joi.string().valid('optional', 'mandatory').default('optional')
 });
 
 const createLeadsFields = {
@@ -71,7 +72,8 @@ const updateField = {
   body: Joi.object()
     .keys({
       name: Joi.string().trim().min(1).max(100),
-      type: Joi.string().trim().min(1).max(50)
+      type: Joi.string().trim().min(1).max(50),
+      fieldOption: Joi.string().valid('optional', 'mandatory')
     })
     .min(1),
 };

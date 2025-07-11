@@ -12,6 +12,12 @@ const fieldDefinitionSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true
+    },
+    fieldOption: {
+        type: String,
+        enum: ['optional', 'mandatory'],
+        default: 'optional',
+        trim: true
     }
 }, { _id: false }); // Disable _id for subdocuments
 
