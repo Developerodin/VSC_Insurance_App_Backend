@@ -105,6 +105,72 @@ const updateWalletOnWithdrawalRequest = async (userId, amount, withdrawalRequest
 };
 
 /**
+ * Update wallet on commission approval
+ * @param {string} userId - User ID
+ * @param {number} amount - Commission amount
+ * @param {string} commissionId - Commission ID
+ * @param {string} leadId - Lead ID
+ * @returns {Promise<Wallet>}
+ */
+const updateWalletOnCommissionApproval = async (userId, amount, commissionId, leadId) => {
+  const wallet = await getOrCreateWallet(userId);
+  
+  // Update wallet balance and statistics
+  wallet.balance += amount;
+  wallet.totalEarnings += amount;
+  wallet.totalLeadsClosed += 1;
+  wallet.lastTransactionAt = new Date();
+  await wallet.save();
+
+  // Create wallet transaction
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: 'commission',
+    amount,
+    balance: wallet.balance,
+    status: 'completed',
+    reference: commissionId,
+    referenceModel: 'Commission',
+    description: `Commission approved and added to wallet for lead ${leadId}`,
+  });
+
+  return wallet;
+};
+
+/**
+ * Reverse wallet update when commission is rejected/cancelled
+ * @param {string} userId - User ID
+ * @param {number} amount - Commission amount to reverse
+ * @param {string} commissionId - Commission ID
+ * @param {string} leadId - Lead ID
+ * @returns {Promise<Wallet>}
+ */
+const reverseWalletOnCommissionRejection = async (userId, amount, commissionId, leadId) => {
+  const wallet = await getOrCreateWallet(userId);
+  
+  // Reverse wallet balance and statistics
+  wallet.balance -= amount;
+  wallet.totalEarnings -= amount;
+  wallet.totalLeadsClosed -= 1;
+  wallet.lastTransactionAt = new Date();
+  await wallet.save();
+
+  // Create wallet transaction for reversal
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: 'commission_reversal',
+    amount: -amount, // Negative amount to indicate reversal
+    balance: wallet.balance,
+    status: 'completed',
+    reference: commissionId,
+    referenceModel: 'Commission',
+    description: `Commission rejected/cancelled - amount reversed for lead ${leadId}`,
+  });
+
+  return wallet;
+};
+
+/**
  * Update wallet on withdrawal rejection
  * @param {string} userId - User ID
  * @param {number} amount - Withdrawal amount
@@ -158,6 +224,8 @@ export default {
   getOrCreateWallet,
   updateWalletOnLeadCreation,
   updateWalletOnLeadClosure,
+  updateWalletOnCommissionApproval,
+  reverseWalletOnCommissionRejection,
   updateWalletOnWithdrawalRequest,
   updateWalletOnWithdrawalRejection,
   getWalletStats,

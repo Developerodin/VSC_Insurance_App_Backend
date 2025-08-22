@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import { Commission, User, Notification, Transaction } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import {catchAsync} from '../utils/catchAsync.js';
+import * as walletService from '../services/wallet.service.js';
 
 export const createCommission = catchAsync(async (req, res) => {
   console.log('Request body:', req.body);
@@ -30,12 +31,14 @@ export const createCommission = catchAsync(async (req, res) => {
 export const getCommissions = catchAsync(async (req, res) => {
   const filter = {};
   const options = {
-    populate: 'product paymentDetails.bankAccount',
-    select: 'product.name product.commission paymentDetails.bankAccount.accountHolderName paymentDetails.bankAccount.accountNumber paymentDetails.bankAccount.bankName',
+    populate: 'agent product lead',
+    sortBy: req.query.sortBy || 'createdAt',
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1,
   };
 
-  // Filter by agent if not admin
-  if (req.user.role !== 'admin') {
+  // Filter by agent if not admin - allow admins to see all commissions
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     filter.agent = req.user.id;
   }
 
@@ -47,7 +50,15 @@ export const getCommissions = catchAsync(async (req, res) => {
     };
   }
 
+  console.log('🔍 Commission filter:', filter);
+  console.log('🔍 Commission options:', options);
+  console.log('🔍 User role:', req.user.role);
+
   const commissions = await Commission.paginate(filter, options);
+  
+  console.log('🔍 Commissions found:', commissions.totalResults);
+  console.log('🔍 First commission:', commissions.results[0]);
+  
   res.send(commissions);
 });
 
@@ -70,12 +81,49 @@ export const updateCommission = catchAsync(async (req, res) => {
   if (!commission) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Commission not found');
   }
-  if (req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can update commissions');
   }
 
   const oldStatus = commission.status;
+  const oldAmount = commission.amount;
+  
+  // Store original values for comparison
+  const originalCommission = {
+    amount: commission.amount,
+    percentage: commission.percentage,
+    baseAmount: commission.baseAmount,
+    bonus: commission.bonus
+  };
+
+  // Update commission fields
   Object.assign(commission, req.body);
+  
+  // If amount-related fields are updated, recalculate the total amount
+  if (req.body.percentage || req.body.baseAmount || req.body.bonus) {
+    const newPercentage = req.body.percentage || commission.percentage;
+    const newBaseAmount = req.body.baseAmount || commission.baseAmount;
+    const newBonus = req.body.bonus !== undefined ? req.body.bonus : commission.bonus;
+    
+    // Recalculate commission amount
+    const newCommissionAmount = (newPercentage * newBaseAmount) / 100;
+    const newTotalAmount = newCommissionAmount + newBonus;
+    
+    commission.amount = newTotalAmount;
+    commission.percentage = newPercentage;
+    commission.baseAmount = newBaseAmount;
+    commission.bonus = newBonus;
+    
+    console.log('🔍 Commission amount recalculated:', {
+      oldAmount: originalCommission.amount,
+      newAmount: newTotalAmount,
+      percentage: newPercentage,
+      baseAmount: newBaseAmount,
+      bonus: newBonus,
+      commissionAmount: newCommissionAmount
+    });
+  }
+  
   await commission.save();
 
   // Create notification if status changed
@@ -92,61 +140,397 @@ export const updateCommission = catchAsync(async (req, res) => {
         newStatus: commission.status,
       },
     });
+
+    // Update wallet only when commission is approved
+    if (commission.status === 'approved' && oldStatus !== 'approved') {
+      console.log('🔍 Commission approved - updating wallet for agent:', commission.agent);
+      
+      try {
+        // Update wallet with approved commission amount
+        const wallet = await walletService.updateWalletOnCommissionApproval(
+          commission.agent,
+          commission.amount,
+          commission._id,
+          commission.lead
+        );
+
+        // Create notification for wallet update
+        await Notification.create({
+          recipient: commission.agent,
+          type: 'commission_approved',
+          title: 'Commission Approved & Added to Wallet',
+          message: `Your commission of $${commission.amount} has been approved and added to your wallet. New balance: $${wallet.balance}`,
+          channels: ['in_app', 'email'],
+          data: {
+            commissionId: commission._id,
+            amount: commission.amount,
+            walletBalance: wallet.balance,
+            oldStatus,
+            newStatus: commission.status,
+          },
+        });
+
+        console.log('✅ Wallet updated successfully for approved commission');
+      } catch (error) {
+        console.error('❌ Error updating wallet for approved commission:', error);
+        // Don't fail the commission update if wallet update fails
+        // The commission is still approved, just the wallet update failed
+      }
+    }
+
+    // Handle commission rejection/cancellation - reverse wallet update if it was previously approved
+    if ((commission.status === 'rejected' || commission.status === 'cancelled') && oldStatus === 'approved') {
+      console.log('🔍 Commission rejected/cancelled - reversing wallet update for agent:', commission.agent);
+      
+      try {
+        // Reverse wallet update for rejected/cancelled commission
+        const wallet = await walletService.reverseWalletOnCommissionRejection(
+          commission.agent,
+          commission.amount,
+          commission._id,
+          commission.lead
+        );
+
+        // Create notification for wallet reversal
+        await Notification.create({
+          recipient: commission.agent,
+          type: 'commission_rejected',
+          title: 'Commission Rejected - Wallet Updated',
+          message: `Your commission of $${commission.amount} has been ${commission.status}. Amount has been removed from your wallet. New balance: $${wallet.balance}`,
+          channels: ['in_app', 'email'],
+          data: {
+            commissionId: commission._id,
+            amount: commission.amount,
+            walletBalance: wallet.balance,
+            oldStatus,
+            newStatus: commission.status,
+          },
+        });
+
+        console.log('✅ Wallet reversed successfully for rejected/cancelled commission');
+      } catch (error) {
+        console.error('❌ Error reversing wallet for rejected/cancelled commission:', error);
+        // Don't fail the commission update if wallet reversal fails
+      }
+    }
   }
+
+  // Create notification if amount changed significantly
+  if (Math.abs(oldAmount - commission.amount) > 1) { // More than ₹1 difference
+    await Notification.create({
+      recipient: commission.agent,
+      type: 'commission_amount_change',
+      title: 'Commission Amount Updated',
+      message: `Your commission amount has been updated from ₹${oldAmount} to ₹${commission.amount}`,
+      channels: ['in_app', 'email'],
+      data: {
+        commissionId: commission._id,
+        oldAmount,
+        newAmount: commission.amount,
+        reason: req.body.reason || 'Admin adjustment'
+      },
+    });
+  }
+
+  // Log the update for audit
+  console.log('🔍 Commission updated:', {
+    commissionId: commission._id,
+    oldValues: originalCommission,
+    newValues: {
+      amount: commission.amount,
+      percentage: commission.percentage,
+      baseAmount: commission.baseAmount,
+      bonus: commission.bonus
+    },
+    updatedBy: req.user.id,
+    updatedAt: new Date()
+  });
 
   res.send(commission);
 });
 
-export const processPayout = catchAsync(async (req, res) => {
-  const commission = await Commission.findById(req.params.commissionId);
+export const updateCommissionAmount = catchAsync(async (req, res) => {
+  const { commissionId } = req.params;
+  const { percentage, baseAmount, bonus, reason } = req.body;
+
+  // Only admins can update commission amounts
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can update commission amounts');
+  }
+
+  const commission = await Commission.findById(commissionId);
   if (!commission) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Commission not found');
   }
-  if (req.user.role !== 'admin') {
-    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
+
+  // Store original values
+  const originalValues = {
+    amount: commission.amount,
+    percentage: commission.percentage,
+    baseAmount: commission.baseAmount,
+    bonus: commission.bonus
+  };
+
+  // Update fields if provided
+  if (percentage !== undefined) commission.percentage = percentage;
+  if (baseAmount !== undefined) commission.baseAmount = baseAmount;
+  if (bonus !== undefined) commission.bonus = bonus;
+
+  // Recalculate total amount
+  const newCommissionAmount = (commission.percentage * commission.baseAmount) / 100;
+  const newTotalAmount = newCommissionAmount + commission.bonus;
+  commission.amount = newTotalAmount;
+
+  // Validate the new amount
+  if (newTotalAmount < 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Commission amount cannot be negative');
   }
-  if (commission.status !== 'approved') {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Commission must be approved before payout');
+
+  await commission.save();
+
+  // Create detailed audit log
+  console.log('🔍 Commission amount updated:', {
+    commissionId: commission._id,
+    oldValues: originalValues,
+    newValues: {
+      amount: commission.amount,
+      percentage: commission.percentage,
+      baseAmount: commission.baseAmount,
+      bonus: commission.bonus
+    },
+    reason: reason || 'Admin adjustment',
+    updatedBy: req.user.id,
+    updatedAt: new Date()
+  });
+
+  // Notify agent about amount change
+  if (Math.abs(originalValues.amount - commission.amount) > 1) {
+    await Notification.create({
+      recipient: commission.agent,
+      type: 'commission_amount_change',
+      title: 'Commission Amount Updated',
+      message: `Your commission amount has been updated from ₹${originalValues.amount} to ₹${commission.amount}`,
+      channels: ['in_app', 'email'],
+      data: {
+        commissionId: commission._id,
+        oldAmount: originalValues.amount,
+        newAmount: commission.amount,
+        reason: reason || 'Admin adjustment',
+        updatedBy: req.user.id
+      },
+    });
   }
+
+  res.send({
+    message: 'Commission amount updated successfully',
+    commission,
+    changes: {
+      oldAmount: originalValues.amount,
+      newAmount: commission.amount,
+      oldPercentage: originalValues.percentage,
+      newPercentage: commission.percentage,
+      oldBaseAmount: originalValues.baseAmount,
+      newBaseAmount: commission.baseAmount,
+      oldBonus: originalValues.bonus,
+      newBonus: commission.bonus
+    }
+  });
+});
+
+export const updatePaymentDetails = catchAsync(async (req, res) => {
+  const { commissionId } = req.params;
+  const { 
+    paymentMethod, 
+    bankAccount, 
+    transactionId, 
+    paymentDate,
+    notes,
+    reason 
+  } = req.body;
+
+  // Only admins can update payment details
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can update payment details');
+  }
+
+  const commission = await Commission.findById(commissionId);
+  if (!commission) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Commission not found');
+  }
+
+  // Store original payment details for audit
+  const originalPaymentDetails = { ...commission.paymentDetails };
+
+  // Update payment details
+  commission.paymentDetails = {
+    bankAccount: bankAccount || commission.paymentDetails?.bankAccount,
+    transactionId: transactionId || commission.paymentDetails?.transactionId,
+    paymentDate: paymentDate ? new Date(paymentDate) : commission.paymentDetails?.paymentDate || new Date(),
+    paymentMethod: paymentMethod || commission.paymentDetails?.paymentMethod || 'bank_transfer',
+  };
+
+  // Add notes if provided
+  if (notes) {
+    if (!commission.metadata) commission.metadata = new Map();
+    commission.metadata.set('paymentUpdateNotes', notes);
+    commission.metadata.set('paymentUpdateReason', reason || 'Admin updated payment details');
+    commission.metadata.set('updatedBy', req.user.id);
+    commission.metadata.set('updatedAt', new Date());
+  }
+
+  await commission.save();
+
+  // Create notification for the agent about payment details update
+  await Notification.create({
+    recipient: commission.agent,
+    type: 'payout_processed',
+    title: 'Payment Details Updated',
+    message: `Payment details for your commission of ₹${commission.amount} have been updated`,
+    channels: ['in_app', 'email'],
+    data: {
+      commissionId: commission._id,
+      amount: commission.amount,
+      paymentMethod: commission.paymentDetails.paymentMethod,
+      transactionId: commission.paymentDetails.transactionId,
+      paymentDate: commission.paymentDetails.paymentDate,
+    },
+  });
+
+  // Log the payment details update for audit
+  console.log('🔍 Commission payment details updated:', {
+    commissionId: commission._id,
+    agent: commission.agent,
+    oldPaymentDetails: originalPaymentDetails,
+    newPaymentDetails: commission.paymentDetails,
+    updatedBy: req.user.id,
+    updatedAt: new Date(),
+    notes,
+    reason
+  });
+
+  res.send({
+    message: 'Payment details updated successfully',
+    commission,
+    changes: {
+      oldPaymentDetails: originalPaymentDetails,
+      newPaymentDetails: commission.paymentDetails,
+    }
+  });
+});
+
+export const processPayout = catchAsync(async (req, res) => {
+  const { commissionId } = req.params;
+  const { 
+    paymentMethod, 
+    bankAccount, 
+    transactionId, 
+    paymentDate,
+    notes,
+    reason 
+  } = req.body;
+
+  // Only admins can process payouts
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Only admins can process payouts');
+  }
+
+  const commission = await Commission.findById(commissionId);
+  if (!commission) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Commission not found');
+  }
+
+  // Check if commission can be paid
+  if (commission.status === 'paid') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Commission is already paid');
+  }
+  
+  if (commission.status === 'cancelled') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot pay cancelled commission');
+  }
+
+  // Update commission status to paid
+  commission.status = 'paid';
+  
+  // Update payment details
+  commission.paymentDetails = {
+    bankAccount: bankAccount || commission.paymentDetails?.bankAccount,
+    transactionId: transactionId || commission.paymentDetails?.transactionId,
+    paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+    paymentMethod: paymentMethod || commission.paymentDetails?.paymentMethod || 'bank_transfer',
+  };
+
+  // Add notes if provided
+  if (notes) {
+    if (!commission.metadata) commission.metadata = new Map();
+    commission.metadata.set('payoutNotes', notes);
+    commission.metadata.set('payoutReason', reason || 'Admin processed payout');
+    commission.metadata.set('processedBy', req.user.id);
+    commission.metadata.set('processedAt', new Date());
+  }
+
+  await commission.save();
 
   // Create transaction record
   const transaction = await Transaction.create({
     agent: commission.agent,
     type: 'payout',
     amount: commission.amount,
-    status: 'pending',
+    status: 'completed',
     reference: commission._id,
     referenceModel: 'Commission',
-    paymentMethod: req.body.paymentMethod,
-    bankAccount: req.body.bankAccount,
+    paymentMethod: commission.paymentDetails.paymentMethod,
+    bankAccount: commission.paymentDetails.bankAccount,
+    transactionId: commission.paymentDetails.transactionId,
+    description: `Commission payout for lead ${commission.lead}`,
+    processedBy: req.user.id,
+    processedAt: new Date(),
+    notes: [{
+      content: notes || `Commission payout processed by ${req.user.role}`,
+      createdBy: req.user.id,
+      createdAt: new Date(),
+    }],
   });
-
-  // Update commission status
-  commission.status = 'paid';
-  commission.payout = transaction._id;
-  commission.paymentDetails = {
-    bankAccount: req.body.bankAccount,
-    transactionId: transaction._id,
-    paymentDate: new Date(),
-    paymentMethod: req.body.paymentMethod,
-  };
-  await commission.save();
 
   // Create notification for the agent
   await Notification.create({
     recipient: commission.agent,
     type: 'payout_processed',
-    title: 'Payout Processed',
-    message: `Your commission payout of ${commission.amount} has been processed`,
+    title: 'Commission Payout Processed',
+    message: `Your commission payout of ₹${commission.amount} has been processed successfully`,
     channels: ['in_app', 'email'],
     data: {
       commissionId: commission._id,
       transactionId: transaction._id,
       amount: commission.amount,
+      paymentMethod: commission.paymentDetails.paymentMethod,
+      paymentDate: commission.paymentDetails.paymentDate,
     },
   });
 
-  res.send({ commission, transaction });
+  // Log the payout for audit
+  console.log('🔍 Commission payout processed:', {
+    commissionId: commission._id,
+    agent: commission.agent,
+    amount: commission.amount,
+    paymentMethod: commission.paymentDetails.paymentMethod,
+    transactionId: commission.paymentDetails.transactionId,
+    processedBy: req.user.id,
+    processedAt: new Date(),
+    notes,
+    reason
+  });
+
+  res.send({
+    message: 'Commission payout processed successfully',
+    commission,
+    transaction,
+    paymentDetails: {
+      paymentMethod: commission.paymentDetails.paymentMethod,
+      transactionId: commission.paymentDetails.transactionId,
+      paymentDate: commission.paymentDetails.paymentDate,
+      bankAccount: commission.paymentDetails.bankAccount,
+    }
+  });
 });
 
 export const getCommissionStats = catchAsync(async (req, res) => {
@@ -202,6 +586,8 @@ export default {
   getCommissions,
   getCommission,
   updateCommission,
+  updateCommissionAmount,
+  updatePaymentDetails,
   processPayout,
   getCommissionStats,
   getAgentCommissions,

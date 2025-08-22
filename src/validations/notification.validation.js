@@ -6,6 +6,8 @@ const notificationTypes = [
   'lead_assigned',
   'lead_status_change',
   'commission_earned',
+  'commission_status_change',
+  'commission_amount_change',
   'payout_processed',
   'kyc_verified',
   'bank_account_verified',

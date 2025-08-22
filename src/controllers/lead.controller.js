@@ -89,13 +89,30 @@ export const updateLead = catchAsync(async (req, res) => {
 
     // If status changed to closed and subcategory exists, create commission and update wallet
     if (lead.status === 'closed' && lead.subcategory) {
+      console.log('🔍 Commission check: Lead status is closed and has subcategory');
+      console.log('🔍 Subcategory ID:', lead.subcategory._id);
+      
       const subcategory = await Subcategory.findById(lead.subcategory._id);
+      console.log('🔍 Subcategory found:', !!subcategory);
+      
       if (subcategory && subcategory.commission) {
+        console.log('🔍 Commission config found:', {
+          percentage: subcategory.commission.percentage,
+          basePrice: subcategory.pricing.basePrice,
+          bonus: subcategory.commission.bonus
+        });
+        
         // Calculate commission amount
         const commissionAmount = subcategory.commission.percentage * subcategory.pricing.basePrice / 100;
         const totalAmount = commissionAmount + (subcategory.commission.bonus || 0);
+        
+        console.log('🔍 Commission calculation:', {
+          commissionAmount,
+          bonus: subcategory.commission.bonus || 0,
+          totalAmount
+        });
 
-        // Create commission
+        // Create commission (wallet will be updated only when commission is approved)
         const commission = await Commission.create({
           agent: lead.agent._id,
           product: lead.products[0].product,
@@ -106,28 +123,44 @@ export const updateLead = catchAsync(async (req, res) => {
           bonus: subcategory.commission.bonus || 0,
           status: 'pending',
         });
+        
+        console.log('✅ Commission created successfully:', commission._id);
 
-        // Update wallet
-        const wallet = await walletService.updateWalletOnLeadClosure(
-          lead.agent._id,
-          totalAmount,
-          commission._id,
-          lead._id
-        );
-
-        // Create notification for commission
+        // Create notification for commission creation
         await Notification.create({
           recipient: lead.agent._id,
-          type: 'commission_earned',
-          title: 'Commission Earned',
-          message: `You have earned a commission of $${totalAmount} for closing the lead`,
+          type: 'commission_created',
+          title: 'Commission Created',
+          message: `A commission of $${totalAmount} has been created for closing the lead. It will be added to your wallet once approved by an admin.`,
           channels: ['in_app', 'email'],
           data: {
             commissionId: commission._id,
             amount: totalAmount,
-            walletBalance: wallet.balance,
+            status: 'pending',
           },
         });
+        
+        console.log('✅ Commission workflow completed successfully');
+      } else {
+        console.log('❌ Commission not created because:');
+        if (!subcategory) {
+          console.log('   - Subcategory not found in database');
+        } else if (!subcategory.commission) {
+          console.log('   - Subcategory has no commission configuration');
+          console.log('   - Subcategory data:', {
+            name: subcategory.name,
+            hasCommission: !!subcategory.commission,
+            hasPricing: !!subcategory.pricing
+          });
+        }
+      }
+    } else {
+      console.log('❌ Commission not created because:');
+      if (lead.status !== 'closed') {
+        console.log('   - Lead status is not "closed" (current:', lead.status, ')');
+      }
+      if (!lead.subcategory) {
+        console.log('   - Lead has no subcategory assigned');
       }
     }
   }

@@ -46,6 +46,7 @@ const updateCommission = {
     baseAmount: Joi.number().min(0),
     bonus: Joi.number().min(0),
     status: Joi.string().valid('pending', 'approved', 'paid', 'cancelled'),
+    reason: Joi.string().max(500), // Reason for the update (especially for amount changes)
     paymentDetails: Joi.object().keys({
       bankAccount: Joi.string().custom(objectId),
       transactionId: Joi.string(),
@@ -53,6 +54,32 @@ const updateCommission = {
       paymentMethod: Joi.string().valid('bank_transfer', 'upi', 'cheque', 'other'),
     }),
   }),
+};
+
+const updateCommissionAmount = {
+  params: Joi.object().keys({
+    commissionId: Joi.string().custom(objectId).required(),
+  }),
+  body: Joi.object().keys({
+    percentage: Joi.number().min(0).max(100),
+    baseAmount: Joi.number().min(0),
+    bonus: Joi.number().min(0),
+    reason: Joi.string().max(500).required(), // Reason is required for amount changes
+  }).min(1), // At least one field must be provided
+};
+
+const updatePaymentDetails = {
+  params: Joi.object().keys({
+    commissionId: Joi.string().custom(objectId).required(),
+  }),
+  body: Joi.object().keys({
+    paymentMethod: Joi.string().valid('bank_transfer', 'upi', 'cheque', 'other'),
+    bankAccount: Joi.string().custom(objectId),
+    transactionId: Joi.string(),
+    paymentDate: Joi.date(),
+    notes: Joi.string().max(500),
+    reason: Joi.string().max(500),
+  }).min(1), // At least one field must be provided
 };
 
 const processPayout = {
@@ -92,6 +119,8 @@ export{
   getCommissions,
   getCommission,
   updateCommission,
+  updateCommissionAmount,
+  updatePaymentDetails,
   processPayout,
   getCommissionStats,
   getAgentCommissions,
