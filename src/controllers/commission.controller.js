@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import { Commission, User, Notification, Transaction } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import {catchAsync} from '../utils/catchAsync.js';
-import * as walletService from '../services/wallet.service.js';
+import walletService from '../services/wallet.service.js';
 
 export const createCommission = catchAsync(async (req, res) => {
   console.log('Request body:', req.body);
@@ -17,13 +17,47 @@ export const createCommission = catchAsync(async (req, res) => {
     recipient: req.user.id,
     type: 'commission_earned',
     title: 'Commission Earned',
-    message: `You have earned a commission of ${commission.amount} for the sale`,
+    message: `You have earned a commission of ₹${commission.amount} for the sale`,
     channels: ['in_app', 'email'],
     data: {
       commissionId: commission._id,
       amount: commission.amount,
     },
   });
+
+  // Update wallet if commission is created with approved status
+  if (commission.status === 'approved') {
+    console.log('🔍 Commission created with approved status - updating wallet for agent:', commission.agent);
+    
+    try {
+      const wallet = await walletService.updateWalletOnCommissionApproval(
+        commission.agent,
+        commission.amount,
+        commission._id,
+        commission.lead
+      );
+
+      // Create notification for wallet update
+      await Notification.create({
+        recipient: commission.agent,
+        type: 'commission_approved',
+        title: 'Commission Approved & Added to Wallet',
+        message: `Your commission of ₹${commission.amount} has been approved and added to your wallet. New balance: ₹${wallet.balance}`,
+        channels: ['in_app', 'email'],
+        data: {
+          commissionId: commission._id,
+          amount: commission.amount,
+          walletBalance: wallet.balance,
+          status: commission.status,
+        },
+      });
+
+      console.log('✅ Wallet updated successfully for commission created with approved status');
+    } catch (error) {
+      console.error('❌ Error updating wallet for commission created with approved status:', error);
+      // Don't fail the commission creation if wallet update fails
+    }
+  }
 
   res.status(httpStatus.CREATED).send(commission);
 });
@@ -122,6 +156,34 @@ export const updateCommission = catchAsync(async (req, res) => {
       bonus: newBonus,
       commissionAmount: newCommissionAmount
     });
+
+    // Update wallet if commission was already approved and amount changed
+    if (commission.status === 'approved' && Math.abs(oldAmount - newTotalAmount) > 0.01) {
+      console.log('🔍 Commission amount changed for approved commission - updating wallet');
+      
+      try {
+        const amountDifference = newTotalAmount - oldAmount;
+        const wallet = await walletService.updateWalletOnCommissionAmountChange(
+          commission.agent,
+          amountDifference,
+          commission._id,
+          commission.lead,
+          oldAmount,
+          newTotalAmount
+        );
+
+        console.log('✅ Wallet updated for commission amount change:', {
+          agent: commission.agent,
+          oldAmount,
+          newAmount: newTotalAmount,
+          difference: amountDifference,
+          newWalletBalance: wallet.balance
+        });
+      } catch (error) {
+        console.error('❌ Error updating wallet for commission amount change:', error);
+        // Don't fail the commission update if wallet update fails
+      }
+    }
   }
   
   await commission.save();
@@ -159,7 +221,7 @@ export const updateCommission = catchAsync(async (req, res) => {
           recipient: commission.agent,
           type: 'commission_approved',
           title: 'Commission Approved & Added to Wallet',
-          message: `Your commission of $${commission.amount} has been approved and added to your wallet. New balance: $${wallet.balance}`,
+          message: `Your commission of ₹${commission.amount} has been approved and added to your wallet. New balance: ₹${wallet.balance}`,
           channels: ['in_app', 'email'],
           data: {
             commissionId: commission._id,
@@ -186,7 +248,7 @@ export const updateCommission = catchAsync(async (req, res) => {
         // Reverse wallet update for rejected/cancelled commission
         const wallet = await walletService.reverseWalletOnCommissionRejection(
           commission.agent,
-          commission.amount,
+          oldAmount, // Use old amount since commission was approved with that amount
           commission._id,
           commission.lead
         );
@@ -196,11 +258,11 @@ export const updateCommission = catchAsync(async (req, res) => {
           recipient: commission.agent,
           type: 'commission_rejected',
           title: 'Commission Rejected - Wallet Updated',
-          message: `Your commission of $${commission.amount} has been ${commission.status}. Amount has been removed from your wallet. New balance: $${wallet.balance}`,
+          message: `Your commission of ₹${oldAmount} has been ${commission.status}. Amount has been removed from your wallet. New balance: ₹${wallet.balance}`,
           channels: ['in_app', 'email'],
           data: {
             commissionId: commission._id,
-            amount: commission.amount,
+            amount: oldAmount,
             walletBalance: wallet.balance,
             oldStatus,
             newStatus: commission.status,
@@ -210,6 +272,42 @@ export const updateCommission = catchAsync(async (req, res) => {
         console.log('✅ Wallet reversed successfully for rejected/cancelled commission');
       } catch (error) {
         console.error('❌ Error reversing wallet for rejected/cancelled commission:', error);
+        // Don't fail the commission update if wallet reversal fails
+      }
+    }
+
+    // Handle commission status change from 'paid' to other statuses
+    if (oldStatus === 'paid' && commission.status !== 'paid') {
+      console.log('🔍 Commission status changed from paid - updating wallet for agent:', commission.agent);
+      
+      try {
+        // Reverse wallet update for paid commission that is no longer paid
+        const wallet = await walletService.reverseWalletOnCommissionRejection(
+          commission.agent,
+          oldAmount, // Use old amount since commission was paid with that amount
+          commission._id,
+          commission.lead
+        );
+
+        // Create notification for wallet reversal
+        await Notification.create({
+          recipient: commission.agent,
+          type: 'commission_status_change',
+          title: 'Commission Status Changed from Paid',
+          message: `Your commission of ₹${oldAmount} status has changed from paid to ${commission.status}. Amount has been removed from your wallet. New balance: ₹${wallet.balance}`,
+          channels: ['in_app', 'email'],
+          data: {
+            commissionId: commission._id,
+            amount: oldAmount,
+            walletBalance: wallet.balance,
+            oldStatus,
+            newStatus: commission.status,
+          },
+        });
+
+        console.log('✅ Wallet reversed successfully for commission status change from paid');
+      } catch (error) {
+        console.error('❌ Error reversing wallet for commission status change from paid:', error);
         // Don't fail the commission update if wallet reversal fails
       }
     }
@@ -284,6 +382,34 @@ export const updateCommissionAmount = catchAsync(async (req, res) => {
   // Validate the new amount
   if (newTotalAmount < 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Commission amount cannot be negative');
+  }
+
+  // Update wallet if commission was already approved and amount changed
+  if (commission.status === 'approved' && Math.abs(originalValues.amount - newTotalAmount) > 0.01) {
+    console.log('🔍 Commission amount changed for approved commission - updating wallet');
+    
+    try {
+      const amountDifference = newTotalAmount - originalValues.amount;
+      const wallet = await walletService.updateWalletOnCommissionAmountChange(
+        commission.agent,
+        amountDifference,
+        commission._id,
+        commission.lead,
+        originalValues.amount,
+        newTotalAmount
+      );
+
+      console.log('✅ Wallet updated for commission amount change:', {
+        agent: commission.agent,
+        oldAmount: originalValues.amount,
+        newAmount: newTotalAmount,
+        difference: amountDifference,
+        newWalletBalance: wallet.balance
+      });
+    } catch (error) {
+      console.error('❌ Error updating wallet for commission amount change:', error);
+      // Don't fail the commission update if wallet update fails
+    }
   }
 
   await commission.save();

@@ -202,6 +202,46 @@ const updateWalletOnWithdrawalRejection = async (userId, amount, withdrawalReque
 };
 
 /**
+ * Update wallet when commission amount changes for already approved commission
+ * @param {string} userId - User ID
+ * @param {number} amountDifference - Difference between new and old amount (can be positive or negative)
+ * @param {string} commissionId - Commission ID
+ * @param {string} leadId - Lead ID
+ * @param {number} oldAmount - Previous commission amount
+ * @param {number} newAmount - New commission amount
+ * @returns {Promise<Wallet>}
+ */
+const updateWalletOnCommissionAmountChange = async (userId, amountDifference, commissionId, leadId, oldAmount, newAmount) => {
+  const wallet = await getOrCreateWallet(userId);
+  
+  // Update wallet balance and statistics based on amount difference
+  wallet.balance += amountDifference;
+  wallet.totalEarnings += amountDifference;
+  wallet.lastTransactionAt = new Date();
+  await wallet.save();
+
+  // Create wallet transaction for the amount change
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: amountDifference > 0 ? 'commission_adjustment' : 'commission_reduction',
+    amount: amountDifference,
+    balance: wallet.balance,
+    status: 'completed',
+    reference: commissionId,
+    referenceModel: 'Commission',
+    description: `Commission amount adjusted from ₹${oldAmount} to ₹${newAmount} for lead ${leadId}`,
+    metadata: {
+      oldAmount,
+      newAmount,
+      adjustmentType: amountDifference > 0 ? 'increase' : 'decrease',
+      leadId
+    }
+  });
+
+  return wallet;
+};
+
+/**
  * Get wallet statistics
  * @param {string} userId - User ID
  * @returns {Promise<Object>}
@@ -225,6 +265,7 @@ export default {
   updateWalletOnLeadCreation,
   updateWalletOnLeadClosure,
   updateWalletOnCommissionApproval,
+  updateWalletOnCommissionAmountChange,
   reverseWalletOnCommissionRejection,
   updateWalletOnWithdrawalRequest,
   updateWalletOnWithdrawalRejection,

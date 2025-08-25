@@ -13,15 +13,53 @@ export const createLead = catchAsync(async (req, res) => {
   // Update wallet statistics for lead creation
   await walletService.updateWalletOnLeadCreation(req.user.id);
 
-  // Create notification
+  // Create notification with basic lead details
+  const leadDetails = [];
+  if (req.body.source) leadDetails.push(`Source: ${req.body.source}`);
+  if (req.body.status) leadDetails.push(`Status: ${req.body.status}`);
+  
+  // Get category name if available
+  let categoryName = '';
+  if (req.body.category) {
+    try {
+      const category = await Category.findById(req.body.category);
+      if (category) categoryName = category.name;
+    } catch (error) {
+      console.log('Could not fetch category name for notification');
+    }
+  }
+  if (categoryName) leadDetails.push(`Category: ${categoryName}`);
+  
+  // Get subcategory name if available
+  let subcategoryName = '';
+  if (req.body.subcategory) {
+    try {
+      const subcategory = await Subcategory.findById(req.body.subcategory);
+      if (subcategory) subcategoryName = subcategory.name;
+    } catch (error) {
+      console.log('Could not fetch subcategory name for notification');
+    }
+  }
+  if (subcategoryName) leadDetails.push(`Subcategory: ${subcategoryName}`);
+  
+  const message = leadDetails.length > 0 
+    ? `New lead created with details: ${leadDetails.join(', ')}`
+    : 'A new lead has been created';
+
   await Notification.create({
     recipient: req.user.id,
     type: 'lead_created',
     title: 'New Lead Created',
-    message: 'A new lead has been created',
+    message,
     channels: ['in_app', 'email'],
     data: {
       leadId: lead._id,
+      source: req.body.source,
+      status: req.body.status,
+      category: req.body.category,
+      subcategory: req.body.subcategory,
+      categoryName,
+      subcategoryName,
     },
   });
 
@@ -129,9 +167,9 @@ export const updateLead = catchAsync(async (req, res) => {
         // Create notification for commission creation
         await Notification.create({
           recipient: lead.agent._id,
-          type: 'commission_created',
+          type: 'commission_earned',
           title: 'Commission Created',
-          message: `A commission of $${totalAmount} has been created for closing the lead. It will be added to your wallet once approved by an admin.`,
+          message: `A commission of ₹${totalAmount} has been created for closing the lead. It will be added to your wallet once approved by an admin.`,
           channels: ['in_app', 'email'],
           data: {
             commissionId: commission._id,
