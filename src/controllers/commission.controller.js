@@ -163,22 +163,66 @@ export const updateCommission = catchAsync(async (req, res) => {
       
       try {
         const amountDifference = newTotalAmount - oldAmount;
-        const wallet = await walletService.updateWalletOnCommissionAmountChange(
-          commission.agent,
-          amountDifference,
-          commission._id,
-          commission.lead,
-          oldAmount,
-          newTotalAmount
-        );
-
-        console.log('✅ Wallet updated for commission amount change:', {
-          agent: commission.agent,
-          oldAmount,
-          newAmount: newTotalAmount,
-          difference: amountDifference,
-          newWalletBalance: wallet.balance
-        });
+        
+        // Determine what specifically changed and create appropriate transactions
+        if (req.body.percentage !== undefined && req.body.percentage !== originalCommission.percentage) {
+          // Percentage changed
+          const wallet = await walletService.updateWalletOnCommissionPercentageChange(
+            commission.agent,
+            commission._id,
+            commission.lead,
+            originalCommission.percentage,
+            newPercentage,
+            oldAmount,
+            newTotalAmount
+          );
+          console.log('✅ Wallet updated for commission percentage change:', {
+            agent: commission.agent,
+            oldPercentage: originalCommission.percentage,
+            newPercentage: newPercentage,
+            oldAmount,
+            newAmount: newTotalAmount,
+            difference: amountDifference,
+            newWalletBalance: wallet.balance
+          });
+        } else if (req.body.bonus !== undefined && req.body.bonus !== originalCommission.bonus) {
+          // Bonus changed
+          const wallet = await walletService.updateWalletOnCommissionBonusChange(
+            commission.agent,
+            commission._id,
+            commission.lead,
+            originalCommission.bonus,
+            newBonus,
+            oldAmount,
+            newTotalAmount
+          );
+          console.log('✅ Wallet updated for commission bonus change:', {
+            agent: commission.agent,
+            oldBonus: originalCommission.bonus,
+            newBonus: newBonus,
+            oldAmount,
+            newAmount: newTotalAmount,
+            difference: amountDifference,
+            newWalletBalance: wallet.balance
+          });
+        } else {
+          // Generic amount change (base amount or other factors)
+          const wallet = await walletService.updateWalletOnCommissionAmountChange(
+            commission.agent,
+            amountDifference,
+            commission._id,
+            commission.lead,
+            oldAmount,
+            newTotalAmount
+          );
+          console.log('✅ Wallet updated for commission amount change:', {
+            agent: commission.agent,
+            oldAmount,
+            newAmount: newTotalAmount,
+            difference: amountDifference,
+            newWalletBalance: wallet.balance
+          });
+        }
       } catch (error) {
         console.error('❌ Error updating wallet for commission amount change:', error);
         // Don't fail the commission update if wallet update fails
@@ -245,13 +289,27 @@ export const updateCommission = catchAsync(async (req, res) => {
       console.log('🔍 Commission rejected/cancelled - reversing wallet update for agent:', commission.agent);
       
       try {
-        // Reverse wallet update for rejected/cancelled commission
-        const wallet = await walletService.reverseWalletOnCommissionRejection(
-          commission.agent,
-          oldAmount, // Use old amount since commission was approved with that amount
-          commission._id,
-          commission.lead
-        );
+        let wallet;
+        
+        if (commission.status === 'cancelled') {
+          // Use specific cancellation function for better tracking
+          const cancellationReason = req.body.cancellationReason || 'Admin cancellation';
+          wallet = await walletService.updateWalletOnCommissionCancellation(
+            commission.agent,
+            oldAmount,
+            commission._id,
+            commission.lead,
+            cancellationReason
+          );
+        } else {
+          // Use rejection function for rejected commissions
+          wallet = await walletService.reverseWalletOnCommissionRejection(
+            commission.agent,
+            oldAmount,
+            commission._id,
+            commission.lead
+          );
+        }
 
         // Create notification for wallet reversal
         await Notification.create({

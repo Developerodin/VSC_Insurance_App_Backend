@@ -10,7 +10,7 @@ const walletTransactionSchema = mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['commission', 'withdrawal', 'refund', 'adjustment'],
+      enum: ['commission', 'withdrawal', 'refund', 'adjustment', 'commission_reversal', 'commission_adjustment', 'commission_reduction', 'commission_cancellation', 'commission_percentage_change'],
       required: true,
     },
     amount: {
@@ -36,6 +36,10 @@ const walletTransactionSchema = mongoose.Schema(
     },
     description: {
       type: String,
+    },
+    reason: {
+      type: String,
+      enum: ['lead_closure', 'commission_approval', 'commission_rejection', 'commission_cancellation', 'commission_amount_change', 'commission_percentage_change', 'commission_bonus_change', 'withdrawal_request', 'withdrawal_rejection', 'refund', 'manual_adjustment'],
     },
     metadata: {
       type: Map,

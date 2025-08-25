@@ -63,6 +63,7 @@ const updateWalletOnLeadClosure = async (userId, amount, commissionId, leadId) =
     status: 'completed',
     reference: commissionId,
     referenceModel: 'Commission',
+    reason: 'lead_closure',
     description: `Commission earned for closing lead ${leadId}`,
   });
 
@@ -98,6 +99,7 @@ const updateWalletOnWithdrawalRequest = async (userId, amount, withdrawalRequest
     status: 'pending',
     reference: withdrawalRequestId,
     referenceModel: 'WithdrawalRequest',
+    reason: 'withdrawal_request',
     description: 'Withdrawal request created',
   });
 
@@ -131,6 +133,7 @@ const updateWalletOnCommissionApproval = async (userId, amount, commissionId, le
     status: 'completed',
     reference: commissionId,
     referenceModel: 'Commission',
+    reason: 'commission_approval',
     description: `Commission approved and added to wallet for lead ${leadId}`,
   });
 
@@ -164,6 +167,7 @@ const reverseWalletOnCommissionRejection = async (userId, amount, commissionId, 
     status: 'completed',
     reference: commissionId,
     referenceModel: 'Commission',
+    reason: 'commission_rejection',
     description: `Commission rejected/cancelled - amount reversed for lead ${leadId}`,
   });
 
@@ -195,6 +199,7 @@ const updateWalletOnWithdrawalRejection = async (userId, amount, withdrawalReque
     status: 'completed',
     reference: withdrawalRequestId,
     referenceModel: 'WithdrawalRequest',
+    reason: 'withdrawal_rejection',
     description: 'Refund for rejected withdrawal request',
   });
 
@@ -229,12 +234,147 @@ const updateWalletOnCommissionAmountChange = async (userId, amountDifference, co
     status: 'completed',
     reference: commissionId,
     referenceModel: 'Commission',
+    reason: 'commission_amount_change',
     description: `Commission amount adjusted from ₹${oldAmount} to ₹${newAmount} for lead ${leadId}`,
     metadata: {
       oldAmount,
       newAmount,
       adjustmentType: amountDifference > 0 ? 'increase' : 'decrease',
       leadId
+    }
+  });
+
+  return wallet;
+};
+
+/**
+ * Update wallet when commission percentage changes for already approved commission
+ * @param {string} userId - User ID
+ * @param {string} commissionId - Commission ID
+ * @param {string} leadId - Lead ID
+ * @param {number} oldPercentage - Previous commission percentage
+ * @param {number} newPercentage - New commission percentage
+ * @param {number} oldAmount - Previous commission amount
+ * @param {number} newAmount - New commission amount
+ * @returns {Promise<Wallet>}
+ */
+const updateWalletOnCommissionPercentageChange = async (userId, commissionId, leadId, oldPercentage, newPercentage, oldAmount, newAmount) => {
+  const wallet = await getOrCreateWallet(userId);
+  
+  const amountDifference = newAmount - oldAmount;
+  
+  // Update wallet balance and statistics based on amount difference
+  wallet.balance += amountDifference;
+  wallet.totalEarnings += amountDifference;
+  wallet.lastTransactionAt = new Date();
+  await wallet.save();
+
+  // Create wallet transaction for the percentage change
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: amountDifference > 0 ? 'commission_adjustment' : 'commission_reduction',
+    amount: amountDifference,
+    balance: wallet.balance,
+    status: 'completed',
+    reference: commissionId,
+    referenceModel: 'Commission',
+    reason: 'commission_percentage_change',
+    description: `Commission percentage changed from ${oldPercentage}% to ${newPercentage}% for lead ${leadId}. Amount adjusted from ₹${oldAmount} to ₹${newAmount}`,
+    metadata: {
+      oldPercentage,
+      newPercentage,
+      oldAmount,
+      newAmount,
+      adjustmentType: amountDifference > 0 ? 'increase' : 'decrease',
+      leadId,
+      changeReason: 'percentage_change'
+    }
+  });
+
+  return wallet;
+};
+
+/**
+ * Update wallet when commission bonus changes for already approved commission
+ * @param {string} userId - User ID
+ * @param {string} commissionId - Commission ID
+ * @param {string} leadId - Lead ID
+ * @param {number} oldBonus - Previous bonus amount
+ * @param {number} newBonus - New bonus amount
+ * @param {number} oldAmount - Previous total commission amount
+ * @param {number} newAmount - New total commission amount
+ * @returns {Promise<Wallet>}
+ */
+const updateWalletOnCommissionBonusChange = async (userId, commissionId, leadId, oldBonus, newBonus, oldAmount, newAmount) => {
+  const wallet = await getOrCreateWallet(userId);
+  
+  const amountDifference = newAmount - oldAmount;
+  
+  // Update wallet balance and statistics based on amount difference
+  wallet.balance += amountDifference;
+  wallet.totalEarnings += amountDifference;
+  wallet.lastTransactionAt = new Date();
+  await wallet.save();
+
+  // Create wallet transaction for the bonus change
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: amountDifference > 0 ? 'commission_adjustment' : 'commission_reduction',
+    amount: amountDifference,
+    balance: wallet.balance,
+    status: 'completed',
+    reference: commissionId,
+    referenceModel: 'Commission',
+    reason: 'commission_bonus_change',
+    description: `Commission bonus changed from ₹${oldBonus} to ₹${newBonus} for lead ${leadId}. Total amount adjusted from ₹${oldAmount} to ₹${newAmount}`,
+    metadata: {
+      oldBonus,
+      newBonus,
+      oldAmount,
+      newAmount,
+      adjustmentType: amountDifference > 0 ? 'increase' : 'decrease',
+      leadId,
+      changeReason: 'bonus_change'
+    }
+  });
+
+  return wallet;
+};
+
+/**
+ * Update wallet when commission is cancelled (not just rejected)
+ * @param {string} userId - User ID
+ * @param {number} amount - Commission amount to reverse
+ * @param {string} commissionId - Commission ID
+ * @param {string} leadId - Lead ID
+ * @param {string} cancellationReason - Reason for cancellation
+ * @returns {Promise<Wallet>}
+ */
+const updateWalletOnCommissionCancellation = async (userId, amount, commissionId, leadId, cancellationReason = 'Admin cancellation') => {
+  const wallet = await getOrCreateWallet(userId);
+  
+  // Reverse wallet balance and statistics
+  wallet.balance -= amount;
+  wallet.totalEarnings -= amount;
+  wallet.totalLeadsClosed -= 1;
+  wallet.lastTransactionAt = new Date();
+  await wallet.save();
+
+  // Create wallet transaction for cancellation
+  await WalletTransaction.create({
+    wallet: wallet._id,
+    type: 'commission_cancellation',
+    amount: -amount, // Negative amount to indicate reversal
+    balance: wallet.balance,
+    status: 'completed',
+    reference: commissionId,
+    referenceModel: 'Commission',
+    reason: 'commission_cancellation',
+    description: `Commission cancelled for lead ${leadId}. Amount ₹${amount} removed from wallet. Reason: ${cancellationReason}`,
+    metadata: {
+      leadId,
+      cancellationReason,
+      cancelledAmount: amount
     }
   });
 
@@ -269,5 +409,8 @@ export default {
   reverseWalletOnCommissionRejection,
   updateWalletOnWithdrawalRequest,
   updateWalletOnWithdrawalRejection,
+  updateWalletOnCommissionPercentageChange,
+  updateWalletOnCommissionBonusChange,
+  updateWalletOnCommissionCancellation,
   getWalletStats,
 }; 
