@@ -6,6 +6,8 @@ const createCategory = {
     description: Joi.string().required(),
     type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding').required(),
     status: Joi.string().valid('active', 'inactive').default('active'),
+    image: Joi.string().uri().allow(null, ''),
+    imageKey: Joi.string().allow(null, ''),
     metadata: Joi.object().pattern(Joi.string(), Joi.any()),
   }),
 };
@@ -37,6 +39,8 @@ const updateCategory = {
       description: Joi.string(),
       type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
       status: Joi.string().valid('active', 'inactive'),
+      image: Joi.string().uri().allow(null, ''),
+      imageKey: Joi.string().allow(null, ''),
       metadata: Joi.object().pattern(Joi.string(), Joi.any()),
     })
     .min(1),
@@ -54,4 +58,4 @@ export {
   getCategory,
   updateCategory,
   deleteCategory,
-}; 
+};

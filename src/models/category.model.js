@@ -23,6 +23,16 @@ const categorySchema = mongoose.Schema(
       enum: ['active', 'inactive'],
       default: 'active',
     },
+    image: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    imageKey: {
+      type: String,
+      required: false,
+      trim: true,
+    },
     metadata: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,

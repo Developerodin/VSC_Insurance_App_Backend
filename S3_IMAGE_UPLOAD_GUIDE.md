@@ -12,11 +12,11 @@
 
 ## 🎯 Overview
 
-This guide explains how to upload images to AWS S3 and then save the image URL and key to the subcategory model. The process involves:
+This guide explains how to upload images to AWS S3 and then save the image URL and key to the **subcategory** and **category** models. The process involves:
 
 1. **Upload image to S3** using the common upload endpoint
 2. **Get S3 response** with URL and key
-3. **Save to subcategory** using the image URL and key
+3. **Save to subcategory/category** using the image URL and key
 
 ## 🔧 Prerequisites
 
@@ -64,6 +64,14 @@ Content-Type: application/json
 Authorization: Bearer <your_jwt_token>
 ```
 
+### 3. Create/Update Category with Image
+```
+POST /v1/categories
+PATCH /v1/categories/:categoryId
+Content-Type: application/json
+Authorization: Bearer <your_jwt_token>
+```
+
 ## 📝 Step-by-Step Process
 
 ### Step 1: Upload Image to S3
@@ -96,7 +104,7 @@ const result = await response.json();
 const { url, key } = result.data;
 ```
 
-### Step 2: Save Image Data to Subcategory
+### Step 2: Save Image Data to Subcategory/Category
 
 #### Create New Subcategory:
 ```json
@@ -109,7 +117,18 @@ const { url, key } = result.data;
 }
 ```
 
-#### Update Existing Subcategory:
+#### Create New Category:
+```json
+{
+  "name": "Life Insurance",
+  "description": "Comprehensive life insurance products",
+  "type": "insurance",
+  "image": "https://bucket.s3.amazonaws.com/1234567890-uuid.jpg",
+  "imageKey": "1234567890-uuid.jpg"
+}
+```
+
+#### Update Existing Subcategory/Category:
 ```json
 {
   "image": "https://bucket.s3.amazonaws.com/1234567890-uuid.jpg",
@@ -202,7 +221,50 @@ Body (raw JSON):
 }
 ```
 
-### Example 2: Update Existing Subcategory Image
+### Example 2: Complete Image Upload & Category Creation
+
+#### Step 1: Upload Image
+```
+POST http://localhost:3002/v1/common/upload
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Body (form-data):
+  file: [Select your image file]
+```
+
+#### Step 2: Create Category with Image
+```
+POST http://localhost:3002/v1/categories
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "name": "Life Insurance",
+  "description": "Comprehensive life insurance products and services",
+  "type": "insurance",
+  "status": "active",
+  "image": "https://your-bucket.s3.amazonaws.com/1703123456789-abc123-def456.jpg",
+  "imageKey": "1703123456789-abc123-def456.jpg"
+}
+```
+
+**Expected Response:**
+```json
+{
+  "_id": "64f1a2b3c4d5e6f7a8b9c0d3",
+  "name": "Life Insurance",
+  "description": "Comprehensive life insurance products and services",
+  "type": "insurance",
+  "status": "active",
+  "image": "https://your-bucket.s3.amazonaws.com/1703123456789-abc123-def456.jpg",
+  "imageKey": "1703123456789-abc123-def456.jpg",
+  "createdAt": "2023-12-21T10:30:00.000Z",
+  "updatedAt": "2023-12-21T10:30:00.000Z"
+}
+```
+
+### Example 3: Update Existing Subcategory/Category Image
 
 #### Step 1: Upload New Image
 ```
@@ -216,6 +278,19 @@ Body (form-data):
 #### Step 2: Update Subcategory with New Image
 ```
 PATCH http://localhost:3002/v1/subcategories/64f1a2b3c4d5e6f7a8b9c0d2
+Headers:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+Body (raw JSON):
+{
+  "image": "https://your-bucket.s3.amazonaws.com/1703123456789-new-image.jpg",
+  "imageKey": "1703123456789-new-image.jpg"
+}
+```
+
+#### Step 3: Update Category with New Image
+```
+PATCH http://localhost:3002/v1/categories/64f1a2b3c4d5e6f7a8b9c0d3
 Headers:
   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   Content-Type: application/json
@@ -256,7 +331,7 @@ Body (raw JSON):
 }
 ```
 
-### Common Subcategory Errors
+### Common Subcategory/Category Errors
 
 #### 1. Validation Error
 ```json
@@ -266,7 +341,7 @@ Body (raw JSON):
   "details": [
     {
       "field": "image",
-      "message": "\"image\" must be a string"
+      "message": "\"image\" must be a valid uri"
     }
   ]
 }
@@ -305,7 +380,7 @@ Body (raw JSON):
 ### 3. Security
 - **Authentication**: Always use valid JWT tokens
 - **File Validation**: Validate file types and sizes
-- **Access Control**: Ensure proper permissions for subcategory operations
+- **Access Control**: Ensure proper permissions for subcategory/category operations
 
 ## 🔧 Troubleshooting
 
@@ -317,13 +392,13 @@ Body (raw JSON):
 - Check file size (max 5MB)
 - Ensure proper file format
 
-### Issue 2: Subcategory Creation Fails
+### Issue 2: Subcategory/Category Creation Fails
 **Symptoms**: 400 validation error
 **Solutions**:
-- Verify image URL format
+- Verify image URL format (must be valid URI)
 - Check if imageKey is provided
 - Ensure all required fields are filled
-- Validate category ID exists
+- Validate category ID exists (for subcategories)
 
 ### Issue 3: Image Not Displaying
 **Symptoms**: Image URL returns 404
@@ -346,8 +421,11 @@ Body (raw JSON):
 ### API Documentation
 - **Common Controller**: `/src/controllers/common.controller.js`
 - **Subcategory Controller**: `/src/controllers/subcategory.controller.js`
+- **Category Controller**: `/src/controllers/category.controller.js`
 - **Subcategory Validation**: `/src/validations/subcategory.validation.js`
+- **Category Validation**: `/src/validations/category.validation.js`
 - **Subcategory Model**: `/src/models/subcategory.model.js`
+- **Category Model**: `/src/models/category.model.js`
 
 ### AWS S3 Configuration
 - **Bucket Policy**: Ensure proper access permissions
@@ -367,8 +445,23 @@ Body (raw JSON):
 - [ ] Test S3 connection
 - [ ] Upload test image using `/v1/common/upload`
 - [ ] Create subcategory with image data
-- [ ] Verify image displays correctly
+- [ ] Create category with image data
+- [ ] Verify images display correctly
 - [ ] Test image update functionality
 - [ ] Implement error handling in your application
 
-This guide covers the complete workflow from S3 image upload to subcategory integration. Follow the examples and best practices to ensure smooth implementation.
+## 🔄 Complete Workflow Summary
+
+### For Subcategories:
+1. **Upload Image** → `POST /v1/common/upload`
+2. **Get URL & Key** → From S3 response
+3. **Create/Update Subcategory** → `POST/PATCH /v1/subcategories`
+4. **Include Image Fields** → `image` and `imageKey`
+
+### For Categories:
+1. **Upload Image** → `POST /v1/common/upload`
+2. **Get URL & Key** → From S3 response
+3. **Create/Update Category** → `POST/PATCH /v1/categories`
+4. **Include Image Fields** → `image` and `imageKey`
+
+This guide covers the complete workflow from S3 image upload to both subcategory and category integration. Follow the examples and best practices to ensure smooth implementation.
