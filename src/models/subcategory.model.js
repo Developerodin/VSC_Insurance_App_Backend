@@ -92,10 +92,16 @@ const subcategorySchema = mongoose.Schema(
       url: String,
       type: String,
     }],
-    images: [{
-      url: String,
-      alt: String,
-    }],
+    image: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    imageKey: {
+      type: String,
+      required: false,
+      trim: true,
+    },
     metadata: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,

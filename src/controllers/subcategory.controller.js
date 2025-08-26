@@ -98,16 +98,4 @@ export const addSubcategoryDocument = catchAsync(async (req, res) => {
   subcategory.documents.push({ name, url, type });
   await subcategory.save();
   res.send(subcategory);
-});
-
-export const addSubcategoryImage = catchAsync(async (req, res) => {
-  const subcategory = await Subcategory.findById(req.params.subcategoryId);
-  if (!subcategory) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Subcategory not found');
-  }
-
-  const { url, alt } = req.body;
-  subcategory.images.push({ url, alt });
-  await subcategory.save();
-  res.send(subcategory);
 }); 

@@ -44,12 +44,8 @@ const createSubcategory = {
         type: Joi.string(),
       })
     ),
-    images: Joi.array().items(
-      Joi.object({
-        url: Joi.string(),
-        alt: Joi.string(),
-      })
-    ),
+    image: Joi.string().trim(),
+    imageKey: Joi.string().trim(),
     metadata: Joi.object().pattern(Joi.string(), Joi.any()),
   }),
 };
@@ -119,12 +115,8 @@ const updateSubcategory = {
           type: Joi.string(),
         })
       ),
-      images: Joi.array().items(
-        Joi.object({
-          url: Joi.string(),
-          alt: Joi.string(),
-        })
-      ),
+      image: Joi.string().trim(),
+      imageKey: Joi.string().trim(),
       metadata: Joi.object().pattern(Joi.string(), Joi.any()),
     })
     .min(1),
@@ -145,6 +137,15 @@ const updateSubcategoryStatus = {
   }),
 };
 
+const getSubcategoriesByCategory = {
+  params: Joi.object().keys({
+    categoryId: Joi.string().required(),
+  }),
+  query: Joi.object().keys({
+    status: Joi.string().valid('active', 'inactive', 'draft'),
+  }),
+};
+
 export {
   createSubcategory,
   getSubcategories,
@@ -152,4 +153,5 @@ export {
   updateSubcategory,
   deleteSubcategory,
   updateSubcategoryStatus,
-}; 
+  getSubcategoriesByCategory,
+};
