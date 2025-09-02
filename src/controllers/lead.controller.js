@@ -446,7 +446,8 @@ export const getLeadTimeline = catchAsync(async (req, res) => {
     .populate('agent', 'name email')
     .populate('category')
     .populate('subcategory')
-    .populate('products.product');
+    .populate('products.product')
+    .populate('statusHistory.updatedBy', 'name email');
     
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
@@ -543,9 +544,15 @@ export const getLeadTimeline = catchAsync(async (req, res) => {
     nextFollowUp: lead.nextFollowUp,
     completionPercentage,
     
+    // Status history with remarks and timestamps
+    statusHistory: lead.statusHistory || [],
+    
     // Create phases with completion status and details
     phases: allStatuses.map((status, index) => {
       const phaseDetails = phasesDetails.find(phase => phase.name === status);
+      // Find actual status history entry for this status
+      const statusHistoryEntry = lead.statusHistory?.find(entry => entry.status === status);
+      
       return {
         name: status,
         description: phaseDetails.description,
@@ -553,6 +560,10 @@ export const getLeadTimeline = catchAsync(async (req, res) => {
         completed: index <= currentStatusIndex && lead.status !== 'lost',
         active: status === lead.status,
         skipped: lead.status === 'lost' && index > currentStatusIndex,
+        // Use actual date from status history if available, otherwise estimate
+        actualDate: statusHistoryEntry?.updatedAt || null,
+        remark: statusHistoryEntry?.remark || null,
+        updatedBy: statusHistoryEntry?.updatedBy || null,
         // Indicate when this phase was likely active (estimation)
         estimatedActiveDate: index <= currentStatusIndex ? 
           new Date(new Date(lead.createdAt).getTime() + (index * 3 * 24 * 60 * 60 * 1000)) : null // Roughly 3 days per phase
@@ -592,12 +603,28 @@ export const getLeadTimeline = catchAsync(async (req, res) => {
     ]
   };
   
+  // Add status change events from statusHistory
+  if (lead.statusHistory && lead.statusHistory.length > 0) {
+    lead.statusHistory.forEach((statusEntry, index) => {
+      timeline.keyEvents.push({
+        name: `Status Changed to ${statusEntry.status.charAt(0).toUpperCase() + statusEntry.status.slice(1)}`,
+        date: statusEntry.updatedAt,
+        description: statusEntry.remark || `Status updated to ${statusEntry.status}`,
+        type: 'status_change',
+        status: statusEntry.status,
+        remark: statusEntry.remark,
+        updatedBy: statusEntry.updatedBy
+      });
+    });
+  }
+  
   // Add last contact event if available
   if (lead.lastContact) {
     timeline.keyEvents.push({
       name: 'Last Contact',
       date: lead.lastContact,
-      description: 'Last communication with the lead'
+      description: 'Last communication with the lead',
+      type: 'contact'
     });
   }
   
@@ -606,7 +633,8 @@ export const getLeadTimeline = catchAsync(async (req, res) => {
     timeline.keyEvents.push({
       name: 'Next Follow-up',
       date: lead.nextFollowUp,
-      description: 'Scheduled follow-up with the lead'
+      description: 'Scheduled follow-up with the lead',
+      type: 'follow_up'
     });
   }
   
