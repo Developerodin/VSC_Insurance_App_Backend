@@ -8,7 +8,6 @@ export const createCategory = catchAsync(async (req, res) => {
   const existingCategory = await Category.findOne({ name: req.body.name });
   
   if (existingCategory) {
-    // Return a warning but still create the category
     const category = await Category.create(req.body);
     res.status(httpStatus.CREATED).send({
       ...category.toJSON(),

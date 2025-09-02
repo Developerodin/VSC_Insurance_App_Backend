@@ -37,4 +37,9 @@ router
   .route('/:productId/commission')
   .get(auth('getProducts'), validate(productValidation.getProductCommission), productController.getProductCommission);
 
+// Debug route
+router
+  .route('/debug')
+  .get(auth('getProducts'), productController.debugProducts);
+
 export default router; 

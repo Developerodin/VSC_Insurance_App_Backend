@@ -10,10 +10,22 @@ export const createProduct = catchAsync(async (req, res) => {
 
 export const getProducts = catchAsync(async (req, res) => {
   const filter = {};
-  const options = {};
+  const options = {
+    sortBy: req.query.sortBy || 'createdAt',
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1,
+  };
+  
+  // Add all available filters
+  if (req.query.name) filter.name = req.query.name;
   if (req.query.type) filter.type = req.query.type;
-  if (req.query.category) filter.category = req.query.category;
+  if (req.query.category) filter.categories = { $in: [req.query.category] }; // Fix: categories is array
+  if (req.query.categories) filter.categories = { $in: req.query.categories };
   if (req.query.status) filter.status = req.query.status;
+  
+  // Debug logging
+  console.log('Product filter:', JSON.stringify(filter, null, 2));
+  console.log('Product options:', JSON.stringify(options, null, 2));
   
   const products = await Product.paginate(filter, options);
   res.send(products);
@@ -94,5 +106,17 @@ export const getProductCommission = catchAsync(async (req, res) => {
   }
   res.send({
     commission: product.commission,
+  });
+});
+
+// Debug endpoint to check products and categories
+export const debugProducts = catchAsync(async (req, res) => {
+  const products = await Product.find({}).select('name categories type status').limit(5);
+  const totalProducts = await Product.countDocuments();
+  
+  res.send({
+    totalProducts,
+    sampleProducts: products,
+    message: 'Debug: Check if products exist and have categories'
   });
 }); 

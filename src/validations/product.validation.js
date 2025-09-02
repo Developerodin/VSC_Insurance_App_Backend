@@ -69,6 +69,7 @@ const getProducts = {
   query: Joi.object().keys({
     name: Joi.string(),
     type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding'),
+    category: Joi.string().custom(objectId),
     categories: Joi.array().items(Joi.string().custom(objectId)),
     status: Joi.string().valid('active', 'inactive', 'draft'),
     sortBy: Joi.string(),
