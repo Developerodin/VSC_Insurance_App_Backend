@@ -21,6 +21,7 @@ const createLead = {
       name: Joi.string().required(),
       uploadedAt: Joi.date().default(() => new Date()),
     })),
+    remark: Joi.string().allow(''),
   }),
 };
 
@@ -67,6 +68,7 @@ const updateLead = {
         name: Joi.string().required(),
         uploadedAt: Joi.date(),
       })),
+      remark: Joi.string().allow(''),
     })
     .min(1),
 };
@@ -134,6 +136,16 @@ const updateLeadProducts = {
   }),
 };
 
+const updateLeadStatus = {
+  params: Joi.object().keys({
+    leadId: Joi.string().custom(objectId).required(),
+  }),
+  body: Joi.object().keys({
+    status: Joi.string().valid('new', 'contacted', 'interested', 'followUp', 'qualified', 'proposal', 'negotiation', 'closed', 'lost').required(),
+    remark: Joi.string().allow('').optional(),
+  }),
+};
+
 export {
   createLead,
   getLeads,
@@ -145,4 +157,5 @@ export {
   getLeadsByUserId,
   updateLeadFields,
   updateLeadProducts,
+  updateLeadStatus,
 }; 

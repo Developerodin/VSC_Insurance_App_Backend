@@ -5,10 +5,22 @@ import {catchAsync} from '../utils/catchAsync.js';
 import walletService from '../services/wallet.service.js';
 
 export const createLead = catchAsync(async (req, res) => {
-  const lead = await Lead.create({
+  const leadData = {
     ...req.body,
     agent: req.user.id,
-  });
+  };
+  
+  // Initialize statusHistory with the initial status
+  if (leadData.status) {
+    leadData.statusHistory = [{
+      status: leadData.status,
+      remark: leadData.remark || '',
+      updatedBy: req.user.id,
+      updatedAt: new Date()
+    }];
+  }
+  
+  const lead = await Lead.create(leadData);
 
   // Update wallet statistics for lead creation
   await walletService.updateWalletOnLeadCreation(req.user.id);
@@ -69,7 +81,7 @@ export const createLead = catchAsync(async (req, res) => {
 export const getLeads = catchAsync(async (req, res) => {
   const filter = {};
   const options = {
-    populate: 'agent,category,subcategory,products.product',
+    populate: 'agent,category,subcategory,products.product,statusHistory.updatedBy',
     limit: parseInt(req.query.limit, 10) || 10,
     page: parseInt(req.query.page, 10) || 1
   };
@@ -89,7 +101,8 @@ export const getLead = catchAsync(async (req, res) => {
     .populate('agent', 'name email')
     .populate('category')
     .populate('subcategory')
-    .populate('products.product');
+    .populate('products.product')
+    .populate('statusHistory.updatedBy', 'name email');
     
   if (!lead) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
@@ -108,6 +121,17 @@ export const updateLead = catchAsync(async (req, res) => {
 
   const oldStatus = lead.status;
   Object.assign(lead, req.body);
+  
+  // If status is being updated, add to statusHistory
+  if (req.body.status && req.body.status !== oldStatus) {
+    lead.statusHistory.push({
+      status: req.body.status,
+      remark: req.body.remark || '',
+      updatedBy: req.user.id,
+      updatedAt: new Date()
+    });
+  }
+  
   await lead.save();
 
   // Create notification if status changed
@@ -651,4 +675,134 @@ export const getDocuments = catchAsync(async (req, res) => {
   }
 
   res.send(lead.documents);
+});
+
+export const updateLeadStatus = catchAsync(async (req, res) => {
+  const { status, remark } = req.body;
+  
+  let lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('subcategory');
+  if (!lead) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Lead not found');
+  }
+
+  const oldStatus = lead.status;
+  
+  // Update the lead status
+  lead.status = status;
+  
+  // Add to statusHistory
+  lead.statusHistory.push({
+    status: status,
+    remark: remark || '',
+    updatedBy: req.user.id,
+    updatedAt: new Date()
+  });
+  
+  await lead.save();
+
+  // Create notification if status changed
+  if (oldStatus !== lead.status) {
+    await Notification.create({
+      recipient: lead.agent._id,
+      type: 'lead_status_change',
+      title: 'Lead Status Updated',
+      message: `Lead status has been updated to: ${lead.status}${remark ? ` with remark: ${remark}` : ''}`,
+      channels: ['in_app', 'email'],
+      data: {
+        leadId: lead._id,
+        oldStatus,
+        newStatus: lead.status,
+        remark: remark || '',
+      },
+    });
+
+    // If status changed to closed and subcategory exists, create commission and update wallet
+    if (lead.status === 'closed' && lead.subcategory) {
+      console.log('🔍 Commission check: Lead status is closed and has subcategory');
+      console.log('🔍 Subcategory ID:', lead.subcategory._id);
+      
+      const subcategory = await Subcategory.findById(lead.subcategory._id);
+      console.log('🔍 Subcategory found:', !!subcategory);
+      
+      if (subcategory && subcategory.commission) {
+        console.log('🔍 Commission config found:', {
+          percentage: subcategory.commission.percentage,
+          basePrice: subcategory.pricing.basePrice,
+          bonus: subcategory.commission.bonus
+        });
+        
+        // Calculate commission amount
+        const commissionAmount = subcategory.commission.percentage * subcategory.pricing.basePrice / 100;
+        const totalAmount = commissionAmount + (subcategory.commission.bonus || 0);
+        
+        console.log('🔍 Commission calculation:', {
+          commissionAmount,
+          bonus: subcategory.commission.bonus || 0,
+          totalAmount
+        });
+
+        // Create commission (wallet will be updated only when commission is approved)
+        const commission = await Commission.create({
+          agent: lead.agent._id,
+          product: lead.products[0].product,
+          lead: lead._id,
+          amount: totalAmount,
+          percentage: subcategory.commission.percentage,
+          baseAmount: subcategory.pricing.basePrice,
+          bonus: subcategory.commission.bonus || 0,
+          status: 'pending',
+        });
+        
+        console.log('✅ Commission created successfully:', commission._id);
+
+        // Create notification for commission creation
+        await Notification.create({
+          recipient: lead.agent._id,
+          type: 'commission_earned',
+          title: 'Commission Created',
+          message: `A commission of ₹${totalAmount} has been created for closing the lead. It will be added to your wallet once approved by an admin.`,
+          channels: ['in_app', 'email'],
+          data: {
+            commissionId: commission._id,
+            amount: totalAmount,
+            status: 'pending',
+          },
+        });
+        
+        console.log('✅ Commission workflow completed successfully');
+      } else {
+        console.log('❌ Commission not created because:');
+        if (!subcategory) {
+          console.log('   - Subcategory not found in database');
+        } else if (!subcategory.commission) {
+          console.log('   - Subcategory has no commission configuration');
+          console.log('   - Subcategory data:', {
+            name: subcategory.name,
+            hasCommission: !!subcategory.commission,
+            hasPricing: !!subcategory.pricing
+          });
+        }
+      }
+    } else {
+      console.log('❌ Commission not created because:');
+      if (lead.status !== 'closed') {
+        console.log('   - Lead status is not "closed" (current:', lead.status, ')');
+      }
+      if (!lead.subcategory) {
+        console.log('   - Lead has no subcategory assigned');
+      }
+    }
+  }
+
+  // Fetch and populate the updated lead
+  lead = await Lead.findById(req.params.leadId)
+    .populate('agent', 'name email')
+    .populate('category')
+    .populate('subcategory')
+    .populate('products.product')
+    .populate('statusHistory.updatedBy', 'name email');
+
+  res.send(lead);
 }); 

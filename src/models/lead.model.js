@@ -68,6 +68,27 @@ const leadSchema = mongoose.Schema(
         default: Date.now,
       }
     }],
+    // Status history with remarks and timestamps
+    statusHistory: [{
+      status: {
+        type: String,
+        enum: ['new', 'contacted', 'interested', 'followUp', 'qualified', 'proposal', 'negotiation', 'closed', 'lost'],
+        required: true,
+      },
+      remark: {
+        type: String,
+        default: '',
+      },
+      updatedBy: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      }
+    }],
   },
   {
     timestamps: true,
