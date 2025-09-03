@@ -10,7 +10,7 @@ const subcategorySchema = mongoose.Schema(
     },
     description: {
       type: String,
-      required: true,
+      required: false,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,7 +29,6 @@ const subcategorySchema = mongoose.Schema(
     commission: {
       percentage: {
         type: Number,
-        required: true,
         min: 0,
         max: 100,
       },
@@ -48,7 +47,7 @@ const subcategorySchema = mongoose.Schema(
     pricing: {
       basePrice: {
         type: Number,
-        required: true,
+        required: false,
       },
       currency: {
         type: String,

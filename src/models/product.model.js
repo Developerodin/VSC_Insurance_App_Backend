@@ -20,7 +20,7 @@ const productSchema = mongoose.Schema(
     }],
     description: {
       type: String,
-      required: true,
+      required: false,
     },
     features: [{
       type: String,
@@ -34,7 +34,6 @@ const productSchema = mongoose.Schema(
     commission: {
       percentage: {
         type: Number,
-        required: true,
         min: 0,
         max: 100,
       },

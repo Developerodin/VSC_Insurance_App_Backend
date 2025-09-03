@@ -9,7 +9,7 @@ const createSubcategory = {
     terms: Joi.array().items(Joi.string()),
     eligibility: Joi.string(),
     commission: Joi.object({
-      percentage: Joi.number().required().min(0).max(100),
+      percentage: Joi.number().min(0).max(100),
       minAmount: Joi.number().min(0).default(0),
       maxAmount: Joi.number(),
       bonus: Joi.number().min(0).default(0),

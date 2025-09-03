@@ -11,11 +11,11 @@ const createProduct = {
     terms: Joi.array().items(Joi.string()),
     eligibility: Joi.string(),
     commission: Joi.object().keys({
-      percentage: Joi.number().min(0).max(100).required(),
+      percentage: Joi.number().min(0).max(100),
       minAmount: Joi.number().min(0).default(0),
       maxAmount: Joi.number().min(0),
       bonus: Joi.number().min(0).default(0),
-    }).required(),
+    }),
     pricing: Joi.object().keys({
       basePrice: Joi.number().required(),
       currency: Joi.string().default('INR'),
