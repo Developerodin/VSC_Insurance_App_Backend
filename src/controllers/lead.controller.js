@@ -149,44 +149,25 @@ export const updateLead = catchAsync(async (req, res) => {
       },
     });
 
-    // If status changed to closed and subcategory exists, create commission and update wallet
+    // If status changed to closed, create commission with 0 values (admin will set amounts later)
     if (lead.status === 'closed' && lead.subcategory) {
-      console.log('🔍 Commission check: Lead status is closed and has subcategory');
-      console.log('🔍 Subcategory ID:', lead.subcategory._id);
+      console.log('🔍 Commission check: Lead status is closed, creating commission with 0 values');
+      console.log('🔍 Lead ID:', lead._id);
+      console.log('🔍 Agent ID:', lead.agent._id);
       
-      const subcategory = await Subcategory.findById(lead.subcategory._id);
-      console.log('🔍 Subcategory found:', !!subcategory);
+      // Create commission with 0 values - admin will set amounts later
+      const commission = await Commission.create({
+        agent: lead.agent._id,
+        product: lead.products[0].product,
+        lead: lead._id,
+        amount: 0,
+        percentage: 0,
+        baseAmount: 0,
+        bonus: 0,
+        status: 'pending',
+      });
       
-      if (subcategory && subcategory.commission) {
-        console.log('🔍 Commission config found:', {
-          percentage: subcategory.commission.percentage,
-          basePrice: subcategory.pricing.basePrice,
-          bonus: subcategory.commission.bonus
-        });
-        
-        // Calculate commission amount
-        const commissionAmount = subcategory.commission.percentage * subcategory.pricing.basePrice / 100;
-        const totalAmount = commissionAmount + (subcategory.commission.bonus || 0);
-        
-        console.log('🔍 Commission calculation:', {
-          commissionAmount,
-          bonus: subcategory.commission.bonus || 0,
-          totalAmount
-        });
-
-        // Create commission (wallet will be updated only when commission is approved)
-        const commission = await Commission.create({
-          agent: lead.agent._id,
-          product: lead.products[0].product,
-          lead: lead._id,
-          amount: totalAmount,
-          percentage: subcategory.commission.percentage,
-          baseAmount: subcategory.pricing.basePrice,
-          bonus: subcategory.commission.bonus || 0,
-          status: 'pending',
-        });
-        
-        console.log('✅ Commission created successfully:', commission._id);
+      console.log('✅ Commission created with 0 values, admin will set amounts later:', commission._id);
 
         // Create notification for commission creation
         await Notification.create({
@@ -203,19 +184,7 @@ export const updateLead = catchAsync(async (req, res) => {
         });
         
         console.log('✅ Commission workflow completed successfully');
-      } else {
-        console.log('❌ Commission not created because:');
-        if (!subcategory) {
-          console.log('   - Subcategory not found in database');
-        } else if (!subcategory.commission) {
-          console.log('   - Subcategory has no commission configuration');
-          console.log('   - Subcategory data:', {
-            name: subcategory.name,
-            hasCommission: !!subcategory.commission,
-            hasPricing: !!subcategory.pricing
-          });
-        }
-      }
+
     } else {
       console.log('❌ Commission not created because:');
       if (lead.status !== 'closed') {
@@ -746,44 +715,25 @@ export const updateLeadStatus = catchAsync(async (req, res) => {
       },
     });
 
-    // If status changed to closed and subcategory exists, create commission and update wallet
+    // If status changed to closed, create commission with 0 values (admin will set amounts later)
     if (lead.status === 'closed' && lead.subcategory) {
-      console.log('🔍 Commission check: Lead status is closed and has subcategory');
-      console.log('🔍 Subcategory ID:', lead.subcategory._id);
+      console.log('🔍 Commission check: Lead status is closed, creating commission with 0 values');
+      console.log('🔍 Lead ID:', lead._id);
+      console.log('🔍 Agent ID:', lead.agent._id);
       
-      const subcategory = await Subcategory.findById(lead.subcategory._id);
-      console.log('🔍 Subcategory found:', !!subcategory);
+      // Create commission with 0 values - admin will set amounts later
+      const commission = await Commission.create({
+        agent: lead.agent._id,
+        product: lead.products[0].product,
+        lead: lead._id,
+        amount: 0,
+        percentage: 0,
+        baseAmount: 0,
+        bonus: 0,
+        status: 'pending',
+      });
       
-      if (subcategory && subcategory.commission) {
-        console.log('🔍 Commission config found:', {
-          percentage: subcategory.commission.percentage,
-          basePrice: subcategory.pricing.basePrice,
-          bonus: subcategory.commission.bonus
-        });
-        
-        // Calculate commission amount
-        const commissionAmount = subcategory.commission.percentage * subcategory.pricing.basePrice / 100;
-        const totalAmount = commissionAmount + (subcategory.commission.bonus || 0);
-        
-        console.log('🔍 Commission calculation:', {
-          commissionAmount,
-          bonus: subcategory.commission.bonus || 0,
-          totalAmount
-        });
-
-        // Create commission (wallet will be updated only when commission is approved)
-        const commission = await Commission.create({
-          agent: lead.agent._id,
-          product: lead.products[0].product,
-          lead: lead._id,
-          amount: totalAmount,
-          percentage: subcategory.commission.percentage,
-          baseAmount: subcategory.pricing.basePrice,
-          bonus: subcategory.commission.bonus || 0,
-          status: 'pending',
-        });
-        
-        console.log('✅ Commission created successfully:', commission._id);
+      console.log('✅ Commission created with 0 values, admin will set amounts later:', commission._id);
 
         // Create notification for commission creation
         await Notification.create({
@@ -800,19 +750,7 @@ export const updateLeadStatus = catchAsync(async (req, res) => {
         });
         
         console.log('✅ Commission workflow completed successfully');
-      } else {
-        console.log('❌ Commission not created because:');
-        if (!subcategory) {
-          console.log('   - Subcategory not found in database');
-        } else if (!subcategory.commission) {
-          console.log('   - Subcategory has no commission configuration');
-          console.log('   - Subcategory data:', {
-            name: subcategory.name,
-            hasCommission: !!subcategory.commission,
-            hasPricing: !!subcategory.pricing
-          });
-        }
-      }
+
     } else {
       console.log('❌ Commission not created because:');
       if (lead.status !== 'closed') {

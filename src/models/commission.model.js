@@ -25,13 +25,13 @@ const commissionSchema = mongoose.Schema(
     },
     percentage: {
       type: Number,
-      required: true,
+      default: 0,
       min: 0,
       max: 100,
     },
     baseAmount: {
       type: Number,
-      required: true,
+      default: 0,
       min: 0,
     },
     bonus: {
