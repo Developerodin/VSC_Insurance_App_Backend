@@ -83,6 +83,7 @@ export const getUsers = {
     role: Joi.string().valid(...roles),
     status: Joi.string().valid('pending', 'active', 'inactive', 'suspended'),
     onboardingStatus: Joi.string().valid('pending', 'in_progress', 'completed', 'rejected'),
+    search: Joi.string().trim(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),

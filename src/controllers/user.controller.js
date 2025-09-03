@@ -15,6 +15,30 @@ export const createUser = catchAsync(async (req, res) => {
 export const getUsers = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['name', 'role', 'status', 'onboardingStatus']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  
+  // Add search functionality
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    const searchConditions = [
+      { name: { $regex: searchRegex } },
+      { email: { $regex: searchRegex } },
+      { mobile: { $regex: searchRegex } },
+      { 'kycDetails.panNumber': { $regex: searchRegex } },
+      { 'kycDetails.aadhaarNumber': { $regex: searchRegex } },
+    ];
+
+    // Add numeric search for mobile if the search term is a number
+    if (!isNaN(req.query.search)) {
+      searchConditions.push({ mobile: req.query.search });
+    }
+
+    filter.$or = searchConditions;
+  }
+  
+  console.log('🔍 User filter:', filter);
+  console.log('🔍 User options:', options);
+  console.log('🔍 Search query:', req.query.search);
+  
   const result = await userService.queryUsers(filter, options);
   res.send(result);
 });
