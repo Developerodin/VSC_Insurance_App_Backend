@@ -5,10 +5,8 @@ const createCommission = {
   body: Joi.object({
     product: Joi.string().custom(objectId).required(),
     lead: Joi.string().custom(objectId).required(),
-    amount: Joi.number().min(0).required(),
-    percentage: Joi.number().min(0).max(100).required(),
     baseAmount: Joi.number().min(0).required(),
-    bonus: Joi.number().min(0),
+    tdsPercentage: Joi.number().min(0).max(100),
     status: Joi.string().valid('pending', 'approved', 'paid', 'cancelled').default('pending'),
     paymentDetails: Joi.object({
       bankAccount: Joi.string().custom(objectId),
@@ -41,10 +39,8 @@ const updateCommission = {
     commissionId: Joi.string().custom(objectId),
   }),
   body: Joi.object().keys({
-    amount: Joi.number().min(0),
-    percentage: Joi.number().min(0).max(100),
     baseAmount: Joi.number().min(0),
-    bonus: Joi.number().min(0),
+    tdsPercentage: Joi.number().min(0).max(100),
     status: Joi.string().valid('pending', 'approved', 'paid', 'cancelled'),
     reason: Joi.string().max(500), // Reason for the update (especially for amount changes)
     paymentDetails: Joi.object().keys({
@@ -61,9 +57,8 @@ const updateCommissionAmount = {
     commissionId: Joi.string().custom(objectId).required(),
   }),
   body: Joi.object().keys({
-    percentage: Joi.number().min(0).max(100),
     baseAmount: Joi.number().min(0),
-    bonus: Joi.number().min(0),
+    tdsPercentage: Joi.number().min(0).max(100),
     reason: Joi.string().max(500).required(), // Reason is required for amount changes
   }).min(1), // At least one field must be provided
 };

@@ -155,15 +155,14 @@ export const updateLead = catchAsync(async (req, res) => {
       console.log('🔍 Lead ID:', lead._id);
       console.log('🔍 Agent ID:', lead.agent._id);
       
-      // Create commission with 0 values - admin will set amounts later
+      // Create commission with 0 values - admin will set baseAmount and tdsPercentage later
       const commission = await Commission.create({
         agent: lead.agent._id,
         product: lead.products[0].product,
         lead: lead._id,
         amount: 0,
-        percentage: 0,
         baseAmount: 0,
-        bonus: 0,
+        tdsPercentage: 0,
         status: 'pending',
       });
       
@@ -174,11 +173,11 @@ export const updateLead = catchAsync(async (req, res) => {
           recipient: lead.agent._id,
           type: 'commission_earned',
           title: 'Commission Created',
-          message: `A commission of ₹${totalAmount} has been created for closing the lead. It will be added to your wallet once approved by an admin.`,
+          message: `A commission has been created for closing the lead. Admin will set the amount and approve it for your wallet.`,
           channels: ['in_app', 'email'],
           data: {
             commissionId: commission._id,
-            amount: totalAmount,
+            amount: commission.amount,
             status: 'pending',
           },
         });
@@ -721,15 +720,14 @@ export const updateLeadStatus = catchAsync(async (req, res) => {
       console.log('🔍 Lead ID:', lead._id);
       console.log('🔍 Agent ID:', lead.agent._id);
       
-      // Create commission with 0 values - admin will set amounts later
+      // Create commission with 0 values - admin will set baseAmount and tdsPercentage later
       const commission = await Commission.create({
         agent: lead.agent._id,
         product: lead.products[0].product,
         lead: lead._id,
         amount: 0,
-        percentage: 0,
         baseAmount: 0,
-        bonus: 0,
+        tdsPercentage: 0,
         status: 'pending',
       });
       
@@ -740,11 +738,11 @@ export const updateLeadStatus = catchAsync(async (req, res) => {
           recipient: lead.agent._id,
           type: 'commission_earned',
           title: 'Commission Created',
-          message: `A commission of ₹${totalAmount} has been created for closing the lead. It will be added to your wallet once approved by an admin.`,
+          message: `A commission has been created for closing the lead. Admin will set the amount and approve it for your wallet.`,
           channels: ['in_app', 'email'],
           data: {
             commissionId: commission._id,
-            amount: totalAmount,
+            amount: commission.amount,
             status: 'pending',
           },
         });

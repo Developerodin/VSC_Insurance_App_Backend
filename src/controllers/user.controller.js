@@ -195,7 +195,7 @@ export const createUserBankAccount = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can create bank account for this user
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only create bank accounts for yourself');
   }
 
@@ -222,7 +222,7 @@ export const getUserBankAccounts = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can view bank accounts for this user
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only view your own bank accounts');
   }
 
@@ -245,7 +245,7 @@ export const getUserBankAccount = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can view this bank account
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only view your own bank accounts');
   }
 
@@ -267,7 +267,7 @@ export const updateUserBankAccount = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can update this bank account
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only update your own bank accounts');
   }
 
@@ -291,7 +291,7 @@ export const deleteUserBankAccount = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can delete this bank account
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only delete your own bank accounts');
   }
 
@@ -319,7 +319,7 @@ export const setUserDefaultBankAccount = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can set default for this user
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only set default for your own bank accounts');
   }
 
@@ -351,7 +351,7 @@ export const uploadUserBankAccountDocument = catchAsync(async (req, res) => {
   }
   
   // Check if the requesting user can upload documents for this bank account
-  if (req.user.id !== userId && req.user.role !== 'admin') {
+  if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
     throw new ApiError(httpStatus.FORBIDDEN, 'You can only upload documents for your own bank accounts');
   }
 

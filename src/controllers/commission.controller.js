@@ -6,10 +6,17 @@ import walletService from '../services/wallet.service.js';
 
 export const createCommission = catchAsync(async (req, res) => {
   console.log('Request body:', req.body);
+  
+  // Calculate amount based on baseAmount and tdsPercentage
+  const baseAmount = req.body.baseAmount || 0;
+  const tdsPercentage = req.body.tdsPercentage || 0;
+  const amount = baseAmount - (baseAmount * tdsPercentage / 100);
+  
   // Create commission with agent ID from authenticated user
   const commission = await Commission.create({
     ...req.body,
     agent: req.user.id, // Set agent ID from authenticated user
+    amount: amount, // Auto-calculated amount
   });
 
   // Create notification for the agent
@@ -125,104 +132,56 @@ export const updateCommission = catchAsync(async (req, res) => {
   // Store original values for comparison
   const originalCommission = {
     amount: commission.amount,
-    percentage: commission.percentage,
     baseAmount: commission.baseAmount,
-    bonus: commission.bonus
+    tdsPercentage: commission.tdsPercentage
   };
 
   // Update commission fields
   Object.assign(commission, req.body);
   
-  // If amount-related fields are updated, recalculate the total amount
-  if (req.body.percentage || req.body.baseAmount || req.body.bonus) {
-    const newPercentage = req.body.percentage || commission.percentage;
-    const newBaseAmount = req.body.baseAmount || commission.baseAmount;
-    const newBonus = req.body.bonus !== undefined ? req.body.bonus : commission.bonus;
+  // If amount-related fields are updated, recalculate the amount
+  if (req.body.baseAmount !== undefined || req.body.tdsPercentage !== undefined) {
+    const newBaseAmount = req.body.baseAmount !== undefined ? req.body.baseAmount : commission.baseAmount;
+    const newTdsPercentage = req.body.tdsPercentage !== undefined ? req.body.tdsPercentage : commission.tdsPercentage;
     
-    // Recalculate commission amount
-    const newCommissionAmount = (newPercentage * newBaseAmount) / 100;
-    const newTotalAmount = newCommissionAmount + newBonus;
+    // Recalculate commission amount: baseAmount - (baseAmount * tdsPercentage / 100)
+    const newAmount = newBaseAmount - (newBaseAmount * newTdsPercentage / 100);
     
-    commission.amount = newTotalAmount;
-    commission.percentage = newPercentage;
+    commission.amount = newAmount;
     commission.baseAmount = newBaseAmount;
-    commission.bonus = newBonus;
+    commission.tdsPercentage = newTdsPercentage;
     
     console.log('🔍 Commission amount recalculated:', {
       oldAmount: originalCommission.amount,
-      newAmount: newTotalAmount,
-      percentage: newPercentage,
+      newAmount: newAmount,
       baseAmount: newBaseAmount,
-      bonus: newBonus,
-      commissionAmount: newCommissionAmount
+      tdsPercentage: newTdsPercentage,
+      tdsDeduction: newBaseAmount * newTdsPercentage / 100
     });
 
     // Update wallet if commission was already approved and amount changed
-    if (commission.status === 'approved' && Math.abs(oldAmount - newTotalAmount) > 0.01) {
+    if (commission.status === 'approved' && Math.abs(oldAmount - newAmount) > 0.01) {
       console.log('🔍 Commission amount changed for approved commission - updating wallet');
       
       try {
-        const amountDifference = newTotalAmount - oldAmount;
+        const amountDifference = newAmount - oldAmount;
         
-        // Determine what specifically changed and create appropriate transactions
-        if (req.body.percentage !== undefined && req.body.percentage !== originalCommission.percentage) {
-          // Percentage changed
-          const wallet = await walletService.updateWalletOnCommissionPercentageChange(
-            commission.agent,
-            commission._id,
-            commission.lead,
-            originalCommission.percentage,
-            newPercentage,
-            oldAmount,
-            newTotalAmount
-          );
-          console.log('✅ Wallet updated for commission percentage change:', {
-            agent: commission.agent,
-            oldPercentage: originalCommission.percentage,
-            newPercentage: newPercentage,
-            oldAmount,
-            newAmount: newTotalAmount,
-            difference: amountDifference,
-            newWalletBalance: wallet.balance
-          });
-        } else if (req.body.bonus !== undefined && req.body.bonus !== originalCommission.bonus) {
-          // Bonus changed
-          const wallet = await walletService.updateWalletOnCommissionBonusChange(
-            commission.agent,
-            commission._id,
-            commission.lead,
-            originalCommission.bonus,
-            newBonus,
-            oldAmount,
-            newTotalAmount
-          );
-          console.log('✅ Wallet updated for commission bonus change:', {
-            agent: commission.agent,
-            oldBonus: originalCommission.bonus,
-            newBonus: newBonus,
-            oldAmount,
-            newAmount: newTotalAmount,
-            difference: amountDifference,
-            newWalletBalance: wallet.balance
-          });
-        } else {
-          // Generic amount change (base amount or other factors)
-          const wallet = await walletService.updateWalletOnCommissionAmountChange(
-            commission.agent,
-            amountDifference,
-            commission._id,
-            commission.lead,
-            oldAmount,
-            newTotalAmount
-          );
-          console.log('✅ Wallet updated for commission amount change:', {
-            agent: commission.agent,
-            oldAmount,
-            newAmount: newTotalAmount,
-            difference: amountDifference,
-            newWalletBalance: wallet.balance
-          });
-        }
+        // Generic amount change due to baseAmount or TDS percentage change
+        const wallet = await walletService.updateWalletOnCommissionAmountChange(
+          commission.agent,
+          amountDifference,
+          commission._id,
+          commission.lead,
+          oldAmount,
+          newAmount
+        );
+        console.log('✅ Wallet updated for commission amount change:', {
+          agent: commission.agent,
+          oldAmount,
+          newAmount: newAmount,
+          difference: amountDifference,
+          newWalletBalance: wallet.balance
+        });
       } catch (error) {
         console.error('❌ Error updating wallet for commission amount change:', error);
         // Don't fail the commission update if wallet update fails
@@ -407,7 +366,7 @@ export const updateCommission = catchAsync(async (req, res) => {
 
 export const updateCommissionAmount = catchAsync(async (req, res) => {
   const { commissionId } = req.params;
-  const { percentage, baseAmount, bonus, reason } = req.body;
+  const { baseAmount, tdsPercentage, reason } = req.body;
 
   // Only admins can update commission amounts
   if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
@@ -422,45 +381,42 @@ export const updateCommissionAmount = catchAsync(async (req, res) => {
   // Store original values
   const originalValues = {
     amount: commission.amount,
-    percentage: commission.percentage,
     baseAmount: commission.baseAmount,
-    bonus: commission.bonus
+    tdsPercentage: commission.tdsPercentage
   };
 
   // Update fields if provided
-  if (percentage !== undefined) commission.percentage = percentage;
   if (baseAmount !== undefined) commission.baseAmount = baseAmount;
-  if (bonus !== undefined) commission.bonus = bonus;
+  if (tdsPercentage !== undefined) commission.tdsPercentage = tdsPercentage;
 
-  // Recalculate total amount
-  const newCommissionAmount = (commission.percentage * commission.baseAmount) / 100;
-  const newTotalAmount = newCommissionAmount + commission.bonus;
-  commission.amount = newTotalAmount;
+  // Recalculate total amount: baseAmount - (baseAmount * tdsPercentage / 100)
+  const newAmount = commission.baseAmount - (commission.baseAmount * commission.tdsPercentage / 100);
+  commission.amount = newAmount;
 
   // Validate the new amount
-  if (newTotalAmount < 0) {
+  if (newAmount < 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Commission amount cannot be negative');
   }
 
   // Update wallet if commission was already approved and amount changed
-  if (commission.status === 'approved' && Math.abs(originalValues.amount - newTotalAmount) > 0.01) {
+  if (commission.status === 'approved' && Math.abs(originalValues.amount - newAmount) > 0.01) {
     console.log('🔍 Commission amount changed for approved commission - updating wallet');
     
     try {
-      const amountDifference = newTotalAmount - originalValues.amount;
+      const amountDifference = newAmount - originalValues.amount;
       const wallet = await walletService.updateWalletOnCommissionAmountChange(
         commission.agent,
         amountDifference,
         commission._id,
         commission.lead,
         originalValues.amount,
-        newTotalAmount
+        newAmount
       );
 
       console.log('✅ Wallet updated for commission amount change:', {
         agent: commission.agent,
         oldAmount: originalValues.amount,
-        newAmount: newTotalAmount,
+        newAmount: newAmount,
         difference: amountDifference,
         newWalletBalance: wallet.balance
       });
