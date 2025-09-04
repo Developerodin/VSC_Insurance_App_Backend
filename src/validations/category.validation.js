@@ -52,10 +52,28 @@ const deleteCategory = {
   }),
 };
 
+const updateCategoryStatus = {
+  params: Joi.object().keys({
+    categoryId: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    status: Joi.string().valid('active', 'inactive').required(),
+  }),
+};
+
+const getTopCategories = {
+  query: Joi.object().keys({
+    limit: Joi.number().integer().min(1).max(20).default(5),
+    type: Joi.string().valid('insurance', 'banking', 'capital market', 'it sector', 'project funding').optional(),
+  }),
+};
+
 export {
   createCategory,
   getCategories,
   getCategory,
   updateCategory,
   deleteCategory,
+  updateCategoryStatus,
+  getTopCategories,
 };

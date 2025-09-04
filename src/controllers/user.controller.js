@@ -765,3 +765,211 @@ export const getUserPaidCommissions = catchAsync(async (req, res) => {
   res.send(paidCommissions);
 });
 
+// Get random top 5 users for table display
+export const getRandomUsers = catchAsync(async (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 5;
+  const role = req.query.role || 'user'; // Default to 'user' role, can be overridden
+  
+  // Build filter
+  const filter = {
+    role: role,
+    status: { $in: ['active', 'pending'] } // Only active or pending users
+  };
+  
+  // Add additional filters if provided
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+  
+  // Get total count for random sampling
+  const totalUsers = await User.countDocuments(filter);
+  
+  if (totalUsers === 0) {
+    return res.send({
+      users: [],
+      totalCount: 0,
+      message: 'No users found with the specified criteria'
+    });
+  }
+  
+  // Calculate how many users to skip for random selection
+  const skipCount = Math.floor(Math.random() * Math.max(0, totalUsers - limit));
+  
+  // Get random users with their statistics
+  const randomUsers = await User.aggregate([
+    { $match: filter },
+    {
+      $lookup: {
+        from: 'leads',
+        localField: '_id',
+        foreignField: 'agent',
+        as: 'leads'
+      }
+    },
+    {
+      $lookup: {
+        from: 'commissions',
+        localField: '_id',
+        foreignField: 'agent',
+        as: 'commissions'
+      }
+    },
+    {
+      $lookup: {
+        from: 'bankaccounts',
+        localField: '_id',
+        foreignField: 'agent',
+        as: 'bankAccounts'
+      }
+    },
+    {
+      $addFields: {
+        totalLeads: { $size: '$leads' },
+        totalCommissions: { $sum: '$commissions.amount' },
+        totalBankAccounts: { $size: '$bankAccounts' },
+        lastLeadDate: {
+          $max: '$leads.createdAt'
+        },
+        lastCommissionDate: {
+          $max: '$commissions.createdAt'
+        },
+        // Calculate performance score based on leads and commissions
+        performanceScore: {
+          $add: [
+            { $multiply: [{ $size: '$leads' }, 10] }, // 10 points per lead
+            { $multiply: [{ $sum: '$commissions.amount' }, 0.01] } // 0.01 points per rupee
+          ]
+        }
+      }
+    },
+    {
+      $project: {
+        name: 1,
+        email: 1,
+        mobileNumber: 1,
+        role: 1,
+        status: 1,
+        onboardingStatus: 1,
+        kycStatus: 1,
+        isEmailVerified: 1,
+        isMobileVerified: 1,
+        totalLeads: 1,
+        totalCommissions: 1,
+        totalBankAccounts: 1,
+        lastLeadDate: 1,
+        lastCommissionDate: 1,
+        performanceScore: 1,
+        createdAt: 1,
+        lastLogin: 1,
+        profilePicture: 1,
+        address: 1
+      }
+    },
+    { $skip: skipCount },
+    { $limit: limit },
+    { $sort: { performanceScore: -1 } } // Sort by performance score descending
+  ]);
+  
+  // If we don't have enough users after random selection, get more
+  if (randomUsers.length < limit && totalUsers > limit) {
+    const additionalUsers = await User.aggregate([
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'leads',
+          localField: '_id',
+          foreignField: 'agent',
+          as: 'leads'
+        }
+      },
+      {
+        $lookup: {
+          from: 'commissions',
+          localField: '_id',
+          foreignField: 'agent',
+          as: 'commissions'
+        }
+      },
+      {
+        $lookup: {
+          from: 'bankaccounts',
+          localField: '_id',
+          foreignField: 'agent',
+          as: 'bankAccounts'
+        }
+      },
+      {
+        $addFields: {
+          totalLeads: { $size: '$leads' },
+          totalCommissions: { $sum: '$commissions.amount' },
+          totalBankAccounts: { $size: '$bankAccounts' },
+          lastLeadDate: {
+            $max: '$leads.createdAt'
+          },
+          lastCommissionDate: {
+            $max: '$commissions.createdAt'
+          },
+          performanceScore: {
+            $add: [
+              { $multiply: [{ $size: '$leads' }, 10] },
+              { $multiply: [{ $sum: '$commissions.amount' }, 0.01] }
+            ]
+          }
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          mobileNumber: 1,
+          role: 1,
+          status: 1,
+          onboardingStatus: 1,
+          kycStatus: 1,
+          isEmailVerified: 1,
+          isMobileVerified: 1,
+          totalLeads: 1,
+          totalCommissions: 1,
+          totalBankAccounts: 1,
+          lastLeadDate: 1,
+          lastCommissionDate: 1,
+          performanceScore: 1,
+          createdAt: 1,
+          lastLogin: 1,
+          profilePicture: 1,
+          address: 1
+        }
+      },
+      { $sample: { size: limit - randomUsers.length } },
+      { $sort: { performanceScore: -1 } }
+    ]);
+    
+    randomUsers.push(...additionalUsers);
+  }
+  
+  // Calculate summary statistics
+  const summaryStats = {
+    totalUsers: totalUsers,
+    returnedUsers: randomUsers.length,
+    averageLeads: randomUsers.length > 0 ? 
+      Math.round(randomUsers.reduce((sum, user) => sum + user.totalLeads, 0) / randomUsers.length * 100) / 100 : 0,
+    averageCommissions: randomUsers.length > 0 ? 
+      Math.round(randomUsers.reduce((sum, user) => sum + user.totalCommissions, 0) / randomUsers.length * 100) / 100 : 0,
+    topPerformer: randomUsers.length > 0 ? {
+      name: randomUsers[0].name,
+      performanceScore: randomUsers[0].performanceScore,
+      totalLeads: randomUsers[0].totalLeads,
+      totalCommissions: randomUsers[0].totalCommissions
+    } : null
+  };
+  
+  const response = {
+    users: randomUsers,
+    summary: summaryStats,
+    generatedAt: new Date(),
+    message: `Randomly selected ${randomUsers.length} users from ${totalUsers} total users`
+  };
+  
+  res.send(response);
+});
+

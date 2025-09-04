@@ -348,3 +348,11 @@ export const verifyBankKyc = {
   }),
 };
 
+export const getRandomUsers = {
+  query: Joi.object().keys({
+    limit: Joi.number().integer().min(1).max(20).default(5),
+    role: Joi.string().valid('user', 'admin', 'superAdmin').default('user'),
+    status: Joi.string().valid('pending', 'active', 'inactive', 'suspended').optional(),
+  }),
+};
+
