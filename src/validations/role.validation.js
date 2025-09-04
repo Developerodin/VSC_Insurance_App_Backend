@@ -13,6 +13,7 @@ const getRoles = {
   query: Joi.object().keys({
     name: Joi.string(),
     isActive: Joi.boolean(),
+    search: Joi.string().trim(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),

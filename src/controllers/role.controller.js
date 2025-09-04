@@ -15,9 +15,24 @@ const getRoles = catchAsync(async (req, res) => {
     sortBy: req.query.sortBy || 'createdAt:desc'
   };
 
+  // Add search functionality
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    const searchConditions = [
+      { name: { $regex: searchRegex } },
+      { description: { $regex: searchRegex } }
+    ];
+
+    filter.$or = searchConditions;
+  }
+
   // Add filters
   if (req.query.name) filter.name = { $regex: req.query.name, $options: 'i' };
   if (req.query.isActive !== undefined) filter.isActive = req.query.isActive === 'true';
+
+  console.log('🔍 Role filter:', filter);
+  console.log('🔍 Role options:', options);
+  console.log('🔍 Search query:', req.query.search);
 
   const result = await roleService.queryRoles(filter, options);
   res.send(result);
