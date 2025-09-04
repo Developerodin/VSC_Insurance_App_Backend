@@ -8,8 +8,17 @@ const createRole = catchAsync(async (req, res) => {
 });
 
 const getRoles = catchAsync(async (req, res) => {
-  const filter = req.query;
-  const options = req.query;
+  const filter = {};
+  const options = {
+    limit: parseInt(req.query.limit, 10) || 10,
+    page: parseInt(req.query.page, 10) || 1,
+    sortBy: req.query.sortBy || 'createdAt:desc'
+  };
+
+  // Add filters
+  if (req.query.name) filter.name = { $regex: req.query.name, $options: 'i' };
+  if (req.query.isActive !== undefined) filter.isActive = req.query.isActive === 'true';
+
   const result = await roleService.queryRoles(filter, options);
   res.send(result);
 });

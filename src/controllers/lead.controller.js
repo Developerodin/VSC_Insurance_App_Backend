@@ -769,4 +769,130 @@ export const updateLeadStatus = catchAsync(async (req, res) => {
     .populate('statusHistory.updatedBy', 'name email');
 
   res.send(lead);
+});
+
+export const getMonthlyLeadStats = catchAsync(async (req, res) => {
+  const currentYear = new Date().getFullYear();
+  const year = parseInt(req.query.year) || currentYear;
+  
+  // Build filter based on user role
+  const filter = {
+    createdAt: {
+      $gte: new Date(year, 0, 1), // January 1st of the year
+      $lt: new Date(year + 1, 0, 1) // January 1st of next year
+    }
+  };
+  
+  // If user is not admin or superAdmin, filter by their leads only
+  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
+    filter.agent = req.user.id;
+  }
+  
+  // Get monthly lead counts
+  const monthlyStats = await Lead.aggregate([
+    { $match: filter },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        },
+        count: { $sum: 1 },
+        leads: {
+          $push: {
+            id: '$_id',
+            status: '$status',
+            source: '$source',
+            createdAt: '$createdAt'
+          }
+        }
+      }
+    },
+    {
+      $sort: { '_id.month': 1 }
+    }
+  ]);
+  
+  // Create a complete year array with all 12 months
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  const completeYearData = [];
+  
+  for (let month = 1; month <= 12; month++) {
+    const monthData = monthlyStats.find(stat => stat._id.month === month);
+    
+    completeYearData.push({
+      month: month,
+      monthName: monthNames[month - 1],
+      year: year,
+      count: monthData ? monthData.count : 0,
+      leads: monthData ? monthData.leads : []
+    });
+  }
+  
+  // Calculate total leads for the year
+  const totalLeads = monthlyStats.reduce((sum, month) => sum + month.count, 0);
+  
+  // Calculate average leads per month
+  const averageLeadsPerMonth = totalLeads / 12;
+  
+  // Find the month with highest and lowest leads
+  const maxMonth = monthlyStats.reduce((max, month) => 
+    month.count > max.count ? month : max, 
+    { count: 0, _id: { month: 0 } }
+  );
+  
+  const minMonth = monthlyStats.reduce((min, month) => 
+    month.count < min.count ? month : min, 
+    { count: Infinity, _id: { month: 0 } }
+  );
+  
+  // Get status-wise breakdown for the year
+  const statusBreakdown = await Lead.aggregate([
+    { $match: filter },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+  
+  // Get source-wise breakdown for the year
+  const sourceBreakdown = await Lead.aggregate([
+    { $match: filter },
+    {
+      $group: {
+        _id: '$source',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+  
+  const response = {
+    year: year,
+    totalLeads: totalLeads,
+    averageLeadsPerMonth: Math.round(averageLeadsPerMonth * 100) / 100,
+    monthlyData: completeYearData,
+    summary: {
+      highestMonth: maxMonth.count > 0 ? {
+        month: maxMonth._id.month,
+        monthName: monthNames[maxMonth._id.month - 1],
+        count: maxMonth.count
+      } : null,
+      lowestMonth: minMonth.count < Infinity ? {
+        month: minMonth._id.month,
+        monthName: monthNames[minMonth._id.month - 1],
+        count: minMonth.count
+      } : null
+    },
+    statusBreakdown: statusBreakdown,
+    sourceBreakdown: sourceBreakdown,
+    generatedAt: new Date()
+  };
+  
+  res.send(response);
 }); 

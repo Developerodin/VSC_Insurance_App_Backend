@@ -22,14 +22,14 @@ export const getUsers = catchAsync(async (req, res) => {
     const searchConditions = [
       { name: { $regex: searchRegex } },
       { email: { $regex: searchRegex } },
-      { mobile: { $regex: searchRegex } },
+      { mobileNumber: { $regex: searchRegex } },
       { 'kycDetails.panNumber': { $regex: searchRegex } },
       { 'kycDetails.aadhaarNumber': { $regex: searchRegex } },
     ];
 
     // Add numeric search for mobile if the search term is a number
     if (!isNaN(req.query.search)) {
-      searchConditions.push({ mobile: req.query.search });
+      searchConditions.push({ mobileNumber: req.query.search });
     }
 
     filter.$or = searchConditions;

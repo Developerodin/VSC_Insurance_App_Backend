@@ -22,6 +22,10 @@ router
   .get(auth('getLeads'), validate(leadValidation.getLeadStats), leadController.getLeadStats);
 
 router
+  .route('/stats/monthly')
+  .get(auth('getLeads'), validate(leadValidation.getMonthlyLeadStats), leadController.getMonthlyLeadStats);
+
+router
   .route('/:leadId/assign')
   .post(auth('manageLeads'), validate(leadValidation.assignLead), leadController.assignLead);
 

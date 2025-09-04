@@ -146,6 +146,12 @@ const updateLeadStatus = {
   }),
 };
 
+const getMonthlyLeadStats = {
+  query: Joi.object().keys({
+    year: Joi.number().integer().min(2000).max(3000).optional(),
+  }),
+};
+
 export {
   createLead,
   getLeads,
@@ -158,4 +164,5 @@ export {
   updateLeadFields,
   updateLeadProducts,
   updateLeadStatus,
+  getMonthlyLeadStats,
 }; 

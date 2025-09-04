@@ -21,7 +21,17 @@ const createRole = async (roleBody) => {
  * @returns {Promise<QueryResult>}
  */
 const queryRoles = async (filter, options) => {
+  console.log('🔍 Role Service Debug:');
+  console.log('Filter:', filter);
+  console.log('Options:', options);
+  
+  // First, let's check if there are any roles at all
+  const totalCount = await Role.countDocuments();
+  console.log('Total roles in database:', totalCount);
+  
   const roles = await Role.paginate(filter, options);
+  console.log('Paginated result:', roles);
+  
   return roles;
 };
 

@@ -26,6 +26,10 @@ router
   .get(auth('getProducts'), validate(productValidation.getProductStats), productController.getProductStats);
 
 router
+  .route('/stats/pie-chart')
+  .get(auth('getProducts'), validate(productValidation.getProductPieChartStats), productController.getProductPieChartStats);
+
+router
   .route('/search')
   .get(auth('getProducts'), validate(productValidation.searchProducts), productController.searchProducts);
 

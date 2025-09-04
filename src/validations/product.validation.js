@@ -183,6 +183,12 @@ const getProductCommission = {
   }),
 };
 
+const getProductPieChartStats = {
+  query: Joi.object().keys({
+    // No specific query parameters needed for pie chart stats
+  }),
+};
+
 export {
   createProduct,
   getProducts,
@@ -194,4 +200,5 @@ export {
   searchProducts,
   updateProductStatus,
   getProductCommission,
+  getProductPieChartStats,
 }; 

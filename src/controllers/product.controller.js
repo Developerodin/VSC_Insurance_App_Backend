@@ -119,4 +119,142 @@ export const debugProducts = catchAsync(async (req, res) => {
     sampleProducts: products,
     message: 'Debug: Check if products exist and have categories'
   });
+});
+
+export const getProductPieChartStats = catchAsync(async (req, res) => {
+  const totalProducts = await Product.countDocuments();
+  
+  if (totalProducts === 0) {
+    return res.send({
+      totalProducts: 0,
+      pieChartData: [],
+      message: 'No products found'
+    });
+  }
+
+  // Get product distribution by type
+  const typeDistribution = await Product.aggregate([
+    {
+      $group: {
+        _id: '$type',
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $sort: { count: -1 }
+    }
+  ]);
+
+  // Get product distribution by status
+  const statusDistribution = await Product.aggregate([
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $sort: { count: -1 }
+    }
+  ]);
+
+  // Get top 5 categories by product count
+  const categoryDistribution = await Product.aggregate([
+    { $unwind: '$categories' },
+    {
+      $group: {
+        _id: '$categories',
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'categoryInfo'
+      }
+    },
+    {
+      $unwind: '$categoryInfo'
+    },
+    {
+      $project: {
+        categoryId: '$_id',
+        categoryName: '$categoryInfo.name',
+        count: 1
+      }
+    },
+    {
+      $sort: { count: -1 }
+    },
+    {
+      $limit: 5
+    }
+  ]);
+
+  // Calculate percentages for type distribution
+  const typePieData = typeDistribution.map(item => ({
+    name: item._id,
+    value: item.count,
+    percentage: Math.round((item.count / totalProducts) * 100 * 100) / 100
+  }));
+
+  // Calculate percentages for status distribution
+  const statusPieData = statusDistribution.map(item => ({
+    name: item._id,
+    value: item.count,
+    percentage: Math.round((item.count / totalProducts) * 100 * 100) / 100
+  }));
+
+  // Calculate percentages for category distribution
+  const categoryPieData = categoryDistribution.map(item => ({
+    name: item.categoryName,
+    categoryId: item.categoryId,
+    value: item.count,
+    percentage: Math.round((item.count / totalProducts) * 100 * 100) / 100
+  }));
+
+  // Get additional statistics
+  const additionalStats = await Product.aggregate([
+    {
+      $group: {
+        _id: null,
+        averagePrice: { $avg: '$pricing.basePrice' },
+        minPrice: { $min: '$pricing.basePrice' },
+        maxPrice: { $max: '$pricing.basePrice' },
+        totalValue: { $sum: '$pricing.basePrice' }
+      }
+    }
+  ]);
+
+  const response = {
+    totalProducts,
+    pieChartData: {
+      byType: {
+        title: 'Products by Type',
+        data: typePieData,
+        total: typeDistribution.reduce((sum, item) => sum + item.count, 0)
+      },
+      byStatus: {
+        title: 'Products by Status',
+        data: statusPieData,
+        total: statusDistribution.reduce((sum, item) => sum + item.count, 0)
+      },
+      byCategory: {
+        title: 'Top 5 Categories',
+        data: categoryPieData,
+        total: categoryDistribution.reduce((sum, item) => sum + item.count, 0)
+      }
+    },
+    additionalStats: additionalStats[0] || {
+      averagePrice: 0,
+      minPrice: 0,
+      maxPrice: 0,
+      totalValue: 0
+    },
+    generatedAt: new Date()
+  };
+
+  res.send(response);
 }); 
