@@ -7,13 +7,15 @@ const assignPermissionsToRole = catchAsync(async (req, res) => {
   // Debug logs
   console.log('Request body:', JSON.stringify(req.body));
   console.log('permissionIds from body:', req.body.permissionIds);
+  console.log('productIds from body:', req.body.productIds);
   
   const { roleId } = req.params;
-  const { permissionIds } = req.body;
+  const { permissionIds, productIds } = req.body;
   
   console.log('Extracted permissionIds:', permissionIds);
+  console.log('Extracted productIds:', productIds);
   
-  const rolePermissions = await rolePermissionService.assignPermissionsToRole(roleId, permissionIds);
+  const rolePermissions = await rolePermissionService.assignPermissionsToRole(roleId, permissionIds, productIds);
   res.status(httpStatus.CREATED).send(rolePermissions);
 });
 
@@ -30,6 +32,12 @@ const removePermissionFromRole = catchAsync(async (req, res) => {
 });
 
 // Get permissions for the current user's role
+const getPermissionsForRoleByProduct = catchAsync(async (req, res) => {
+  const { roleId, productId } = req.params;
+  const permissions = await rolePermissionService.getPermissionsForRoleByProduct(roleId, productId);
+  res.send(permissions);
+});
+
 const getMyRolePermissions = catchAsync(async (req, res) => {
   console.log('Getting permissions for current user:', req.user.name);
   
@@ -60,5 +68,6 @@ export default {
   assignPermissionsToRole,
   getPermissionsForRole,
   removePermissionFromRole,
+  getPermissionsForRoleByProduct,
   getMyRolePermissions,
 }; 

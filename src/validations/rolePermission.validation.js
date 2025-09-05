@@ -7,6 +7,7 @@ const assignPermissionsToRole = {
   }),
   body: Joi.object().keys({
     permissionIds: Joi.array().items(Joi.string().custom(objectId)).required(),
+    productIds: Joi.array().items(Joi.string().custom(objectId)).optional(),
   }),
 };
 
@@ -23,8 +24,16 @@ const removePermissionFromRole = {
   }),
 };
 
+const getPermissionsForRoleByProduct = {
+  params: Joi.object().keys({
+    roleId: Joi.string().custom(objectId),
+    productId: Joi.string().custom(objectId),
+  }),
+};
+
 export default {
   assignPermissionsToRole,
   getPermissionsForRole,
   removePermissionFromRole,
+  getPermissionsForRoleByProduct,
 }; 

@@ -12,6 +12,10 @@ const rolePermissionSchema = mongoose.Schema(
       ref: 'Permission',
       required: true,
     },
+    productIds: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+    }],
   },
   {
     timestamps: true,

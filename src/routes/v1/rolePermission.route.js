@@ -32,4 +32,12 @@ router
     rolePermissionController.removePermissionFromRole
   );
 
+router
+  .route('/roles/:roleId/products/:productId/permissions')
+  .get(
+    auth('getRoles', 'getPermissions', 'manageRoles', 'managePermissions'),
+    validate(rolePermissionValidation.getPermissionsForRoleByProduct),
+    rolePermissionController.getPermissionsForRoleByProduct
+  );
+
 export default router; 

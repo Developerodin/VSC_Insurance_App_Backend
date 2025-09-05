@@ -182,6 +182,14 @@ const userSchema = mongoose.Schema(
       },
       bankVerifications:[]
     },
+    // Admin panel specific fields
+    products: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+    }],
+    navigation: {
+      type: mongoose.Schema.Types.Mixed,
+    },
     otp: {
       code: String,
       expiresAt: Date,

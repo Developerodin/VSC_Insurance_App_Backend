@@ -18,6 +18,7 @@ import leadsFieldsRoute from './leadsFields.route.js';
 import dashboardRoute from './dashboard.route.js';
 import walletRoute from './wallet.route.js';
 import withdrawalRequestRoute from './withdrawalRequest.route.js';
+import adminUserRoute from './adminUser.route.js';
 import commonRoute from '../common.routes.js';
 import * as config from '../../config/config.js';
 
@@ -95,6 +96,10 @@ const defaultRoutes = [
   {
     path: '/withdrawal-requests',
     route: withdrawalRequestRoute,
+  },
+  {
+    path: '/admin-users',
+    route: adminUserRoute,
   },
   {
     path: '/files',
